@@ -15,6 +15,7 @@ import org.openimaj.feature.DoubleFVComparison;
 import org.openimaj.feature.FeatureExtractor;
 import org.openimaj.image.FImage;
 import org.openimaj.image.ImageUtilities;
+import org.openimaj.image.processing.algorithm.MeanCenter;
 import org.openimaj.image.processing.resize.ResizeProcessor;
 import org.openimaj.ml.annotation.ScoredAnnotation;
 import org.openimaj.ml.annotation.basic.KNNAnnotator;
@@ -190,8 +191,21 @@ public class TinyImageKNNClassifier {
         splits = new GroupedRandomSplitter<>(images, TRAIN_SIZE, 0, TEST_SIZE);
     }
 
+    /**
+     * Method used for initiating classifier on all training data.
+     * @throws FileSystemException Does what is says on the tin
+     */
+    protected void init() throws FileSystemException {
+        images = new VFSGroupDataset<>(CWD+"/OpenIMAJ-CW3/training", ImageUtilities.FIMAGE_READER);
+        TinyExtractor extractor = new TinyExtractor();
 
-    class TinyExtractor implements FeatureExtractor<DoubleFV, FImage> {
+        // The annotator used to create the model.
+        this.ann = KNNAnnotator.create(extractor, DoubleFVComparison.EUCLIDEAN, K);
+        // Trains the model.
+        this.ann.train(images);
+    }
+
+    private class TinyExtractor implements FeatureExtractor<DoubleFV, FImage> {
         /**
          * Class used to extract the features from the images. This is accomplished by first detecting if the image
          * is rectangular and cropping the image to a square about its center if needed. Then the image is resized using
