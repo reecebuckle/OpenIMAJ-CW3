@@ -13,11 +13,25 @@ public class App {
 
         try {
 
+//NEW FROM JOSH
 //            TinyImageKNNClassifier tinyImageKNNClassifier = new TinyImageKNNClassifier(16, 18);
 ////            tinyImageKNNClassifier.init();
 ////            tinyImageKNNClassifier.classifyImages("Tiny Image Classifier Results.txt");
 
             testTinyImageKNN();
+            LinearClassifier linearClassifier = new LinearClassifier(4,8,500);
+            linearClassifier.trainClassifier();
+            linearClassifier.classifyImages("Linear Classifier Results.txt");
+
+//END OF NEW
+
+            /** OLD FFROM MAX
+            TinyImageKNNClassifier tinyImageKNNClassifier = new TinyImageKNNClassifier(16, 19);
+            tinyImageKNNClassifier.trainClassifier();
+            tinyImageKNNClassifier.classifyImages("Tiny Image Classifier Results.txt");
+
+//            testTinyImageKNN();
+             */
 
         } catch (IOException ioException) {
             ioException.printStackTrace();

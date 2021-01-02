@@ -1,11 +1,6 @@
 package uk.ac.soton.ecs.cw3;
 
 import org.apache.commons.vfs2.FileSystemException;
-import org.openimaj.data.dataset.GroupedDataset;
-import org.openimaj.data.dataset.ListDataset;
-import org.openimaj.data.dataset.VFSGroupDataset;
-import org.openimaj.data.dataset.VFSListDataset;
-import org.openimaj.experiment.dataset.split.GroupedRandomSplitter;
 import org.openimaj.experiment.evaluation.classification.ClassificationEvaluator;
 import org.openimaj.experiment.evaluation.classification.ClassificationResult;
 import org.openimaj.experiment.evaluation.classification.analysers.confusionmatrix.CMAnalyser;
@@ -24,29 +19,19 @@ import org.openimaj.ml.annotation.basic.KNNAnnotator;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
-import java.util.Arrays;
-import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 
-public class TinyImageKNNClassifier {
+public class TinyImageKNNClassifier extends Classifier {
     /**
      * TinyImageKNNClassifier uses K Nearest Neighbours in order to classify a set of images given a test set.
      * To achieve this the image is scaled down to a set pixel size. A feature vector is then extracted by
      * concatenating each row of the image into a 1D vector. Each vector is then used to train the classifier.
      */
 
-
     private final int SIZE; // The size of the image to scale
     private final int K; // The number of neighbours
-    private int TRAIN_SIZE = 100; // The default training size
-    private int TEST_SIZE = 0; // The default testing size
-    private final String CWD = System.getProperty("user.dir"); // The current working directory
-
-    GroupedDataset<String, VFSListDataset<FImage>, FImage> images; // The images extracted to train/test the classifier
-    GroupedRandomSplitter<String, FImage> splits; // The data splits for training/testing
-
-    KNNAnnotator<FImage, String, DoubleFV> ann; // The annotator used for training the model
+    private KNNAnnotator<FImage, String, DoubleFV> ann;
 
     /**
      * Constructor used to set the resized image size and the number of neighbours to use in the model.
@@ -55,21 +40,9 @@ public class TinyImageKNNClassifier {
      * @param k The number of neighbours used to classify new images.
      */
     public TinyImageKNNClassifier(int size, int k) {
-
         this.SIZE = size;
         this.K = k;
 
-    }
-
-    /**
-     * Method used to adjust the training and testing sizes used to split the data for validation.
-     *
-     * @param TRAIN_SIZE The number of elements used to create the training set.
-     * @param TEST_SIZE The number of elements used to create the testing set.
-     */
-    protected void setTestTrainSize(int TRAIN_SIZE, int TEST_SIZE) {
-        this.TRAIN_SIZE = TRAIN_SIZE;
-        this.TEST_SIZE = TEST_SIZE;
     }
 
     /**
@@ -78,6 +51,7 @@ public class TinyImageKNNClassifier {
      * @param filename The name of the file to output the results to.
      * @throws IOException Throws IO exception if test data is not present.
      */
+    @Override
     protected void classifyImages(String filename) throws IOException {
 
         // Used to write the results to
@@ -101,42 +75,28 @@ public class TinyImageKNNClassifier {
     }
 
     /**
-     * Method for sorting filenames numerically so that they appear in order when writing results.
-     *
-     * @param arr String[] containing unsorted filenames
+     * Method used to train the classifier will default to using the whole training data if parameters are not set using
+     * setTestTrainSize(int TRAIN_SIZE, int TEST_SIZE) prior to training.
      */
-    private void sortFilenames(String[] arr) {
-        // Compares the first numerical part of the filename prior to the extension and sorts array in place.
-        Arrays.sort(arr, new Comparator<String>() {
-            @Override
-            public int compare(String o1, String o2) {
-                Integer a = Integer.parseInt(o1.split("\\.")[0]);
-                Integer b = Integer.parseInt(o2.split("\\.")[0]);
-                return a.compareTo(b);
-            }
-        });
-    }
+    @Override
+    protected void trainClassifier() {
 
-    /**
-     * Method for retrieving the image class with the highest confidence score
-     *
-     * @param result The list of annotated results containing confidence to multiple images classes determined by their
-     *               neighbouring images.
-     * @return The image class with the highest confidence score
-     */
-    private String getClassification(List<ScoredAnnotation<String>> result) {
-
-        // Compares all confidence score and determines the maximum score and corresponding image class
-        float min = 0f;
-        String group = null;
-        for (ScoredAnnotation<String> annotation : result) {
-            if (annotation.confidence > min) {
-                min = annotation.confidence;
-                group = annotation.annotation;
+        // Defaults to whole training set
+        if (splits == null) {
+            try {
+                splitData();
+            } catch (FileSystemException e) {
+                e.printStackTrace();
             }
         }
 
-        return group;
+        // The feature extractor used to preprocess each image.
+        TinyExtractor extractor = new TinyExtractor();
+
+        // The annotator used to create the model.
+        this.ann = KNNAnnotator.create(extractor, DoubleFVComparison.EUCLIDEAN, K);
+        // Trains the model.
+        this.ann.train(splits.getTrainingDataset());
     }
 
     /**
@@ -157,45 +117,9 @@ public class TinyImageKNNClassifier {
         return result.getSummaryReport();
     }
 
-    /**
-     * Method used to train the classifier will default to using the whole training data if parameters are not set using
-     * setTestTrainSize(int TRAIN_SIZE, int TEST_SIZE) prior to training.
-     */
-    protected void trainClassifier() {
 
-        // defaults to whole training set
-        if (splits == null) {
-            try {
-                splitData();
-            } catch (FileSystemException e) {
-                e.printStackTrace();
-            }
-        }
-
-        // The feature extractor used to preprocess each image.
-        TinyExtractor extractor = new TinyExtractor();
-
-        // The annotator used to create the model.
-        this.ann = KNNAnnotator.create(extractor, DoubleFVComparison.EUCLIDEAN, K);
-        // Trains the model.
-        this.ann.train(splits.getTrainingDataset());
-    }
-
-    /**
-     * Method used to split the data into training and testing sets. This is done using the classes TRAIN_SIZE and
-     * TEST_SIZE.
-     * @throws FileSystemException Throws an exception if the training set is not in the correct folder.
-     */
-    protected void splitData() throws FileSystemException {
-        images = new VFSGroupDataset<>(CWD+"/OpenIMAJ-CW3/training", ImageUtilities.FIMAGE_READER);
-        splits = new GroupedRandomSplitter<>(images, TRAIN_SIZE, 0, TEST_SIZE);
-    }
-
-    /**
-     * Method used for initiating classifier on all training data.
-     * @throws FileSystemException Does what is says on the tin
-     */
-    protected void init() throws FileSystemException {
+/**  OLD CODE FROM MAX'S
+     protected void init() throws FileSystemException {
         images = new VFSGroupDataset<>(CWD+"/OpenIMAJ-CW3/training", ImageUtilities.FIMAGE_READER);
         TinyExtractor extractor = new TinyExtractor();
 
@@ -203,7 +127,15 @@ public class TinyImageKNNClassifier {
         this.ann = KNNAnnotator.create(extractor, DoubleFVComparison.EUCLIDEAN, K);
         // Trains the model.
         this.ann.train(images);
+
+        // Evaluates the results
+        Map<FImage, ClassificationResult<String>> guesses = eval.evaluate();
+        CMResult<String> result = eval.analyse(guesses);
+
+        return result.getSummaryReport();
+
     }
+    */
 
     private class TinyExtractor implements FeatureExtractor<DoubleFV, FImage> {
         /**
@@ -240,5 +172,4 @@ public class TinyImageKNNClassifier {
             return new DoubleFV(output.getDoublePixelVector());
         }
     }
-
 }
