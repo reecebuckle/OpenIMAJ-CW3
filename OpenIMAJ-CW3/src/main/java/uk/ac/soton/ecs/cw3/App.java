@@ -17,9 +17,10 @@ public class App {
             linearClassifier.trainClassifier();
             linearClassifier.classifyImages("Linear Classifier Results.txt");
 
-//            FOR RUNNING KNN TASK 1
+
+            //FOR RUNNING KNN TASK 1
 //            TinyImageKNNClassifier tinyImageKNNClassifier = new TinyImageKNNClassifier(16, 18);
-//            tinyImageKNNClassifier.trainClassifier();
+//            tinyImageKNNClassifier.init();
 //            tinyImageKNNClassifier.classifyImages("Tiny Image Classifier Results.txt");
 //            testTinyImageKNN();
         } catch (IOException ioException) {

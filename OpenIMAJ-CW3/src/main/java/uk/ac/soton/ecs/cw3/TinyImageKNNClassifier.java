@@ -1,6 +1,7 @@
 package uk.ac.soton.ecs.cw3;
 
 import org.apache.commons.vfs2.FileSystemException;
+import org.openimaj.data.dataset.VFSGroupDataset;
 import org.openimaj.experiment.evaluation.classification.ClassificationEvaluator;
 import org.openimaj.experiment.evaluation.classification.ClassificationResult;
 import org.openimaj.experiment.evaluation.classification.analysers.confusionmatrix.CMAnalyser;
@@ -10,7 +11,6 @@ import org.openimaj.feature.DoubleFVComparison;
 import org.openimaj.feature.FeatureExtractor;
 import org.openimaj.image.FImage;
 import org.openimaj.image.ImageUtilities;
-import org.openimaj.image.processing.algorithm.MeanCenter;
 import org.openimaj.image.processing.resize.ResizeProcessor;
 import org.openimaj.ml.annotation.ScoredAnnotation;
 import org.openimaj.ml.annotation.basic.KNNAnnotator;
@@ -31,7 +31,7 @@ public class TinyImageKNNClassifier extends Classifier {
 
     private final int SIZE; // The size of the image to scale
     private final int K; // The number of neighbours
-    private KNNAnnotator<FImage, String, DoubleFV> ann;
+    private KNNAnnotator<FImage, String, DoubleFV> ann; // The annotator used for training the model
 
     /**
      * Constructor used to set the resized image size and the number of neighbours to use in the model.
@@ -117,8 +117,11 @@ public class TinyImageKNNClassifier extends Classifier {
     }
 
 
-    /**  OLD CODE FROM MAX'S
-     protected void init() throws FileSystemException {
+    /**
+     * Method used for initiating classifier on all training data.
+     * @throws FileSystemException Does what is says on the tin
+     */
+    protected void init() throws FileSystemException {
         images = new VFSGroupDataset<>(CWD+"/OpenIMAJ-CW3/training", ImageUtilities.FIMAGE_READER);
         TinyExtractor extractor = new TinyExtractor();
 
@@ -126,15 +129,8 @@ public class TinyImageKNNClassifier extends Classifier {
         this.ann = KNNAnnotator.create(extractor, DoubleFVComparison.EUCLIDEAN, K);
         // Trains the model.
         this.ann.train(images);
-
-        // Evaluates the results
-        Map<FImage, ClassificationResult<String>> guesses = eval.evaluate();
-        CMResult<String> result = eval.analyse(guesses);
-
-        return result.getSummaryReport();
-
     }
-    */
+
 
     private class TinyExtractor implements FeatureExtractor<DoubleFV, FImage> {
         /**
