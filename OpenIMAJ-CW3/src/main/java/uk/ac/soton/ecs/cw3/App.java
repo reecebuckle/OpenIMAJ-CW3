@@ -13,11 +13,11 @@ public class App {
 
         try {
 
-            TinyImageKNNClassifier tinyImageKNNClassifier = new TinyImageKNNClassifier(16, 18);
-            tinyImageKNNClassifier.init();
-            tinyImageKNNClassifier.classifyImages("Tiny Image Classifier Results.txt");
+//            TinyImageKNNClassifier tinyImageKNNClassifier = new TinyImageKNNClassifier(16, 18);
+////            tinyImageKNNClassifier.init();
+////            tinyImageKNNClassifier.classifyImages("Tiny Image Classifier Results.txt");
 
-//            testTinyImageKNN();
+            testTinyImageKNN();
 
         } catch (IOException ioException) {
             ioException.printStackTrace();
@@ -32,10 +32,10 @@ public class App {
      */
     public static void testTinyImageKNN() throws IOException {
 
-        FileWriter fileWriter = new FileWriter("Tiny Image Classifier Tuning.csv");
+        FileWriter fileWriter = new FileWriter("Tiny Image Classifier Tuning 70-30.csv");
         fileWriter.write("K, accuracy, error\n");
 
-        for (int k = 1; k < 50; k++) {
+        for (int k = 1; k <= 50; k++) {
 
             System.out.println(String.format("Calculating accuracy/error for k-neighbours: %d", k));
 
@@ -46,7 +46,7 @@ public class App {
                 TinyImageKNNClassifier tinyImageKNNClassifier = new TinyImageKNNClassifier(16, k);
 
                 // Load the dataset
-                tinyImageKNNClassifier.setTestTrainSize(80, 20);
+                tinyImageKNNClassifier.setTestTrainSize(90, 10);
                 tinyImageKNNClassifier.splitData();
 
                 tinyImageKNNClassifier.trainClassifier();
