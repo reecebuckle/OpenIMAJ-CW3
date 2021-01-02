@@ -22,12 +22,13 @@ import java.io.IOException;
 import java.util.List;
 import java.util.Map;
 
+/**
+ * TinyImageKNNClassifier uses K Nearest Neighbours in order to classify a set of images given a test set.
+ * To achieve this the image is scaled down to a set pixel size. A feature vector is then extracted by
+ * concatenating each row of the image into a 1D vector. Each vector is then used to train the classifier.
+ */
+
 public class TinyImageKNNClassifier extends Classifier {
-    /**
-     * TinyImageKNNClassifier uses K Nearest Neighbours in order to classify a set of images given a test set.
-     * To achieve this the image is scaled down to a set pixel size. A feature vector is then extracted by
-     * concatenating each row of the image into a 1D vector. Each vector is then used to train the classifier.
-     */
 
     private final int SIZE; // The size of the image to scale
     private final int K; // The number of neighbours
@@ -37,12 +38,29 @@ public class TinyImageKNNClassifier extends Classifier {
      * Constructor used to set the resized image size and the number of neighbours to use in the model.
      *
      * @param size The size of the width and height used to resize the image.
-     * @param k The number of neighbours used to classify new images.
+     * @param k    The number of neighbours used to classify new images.
      */
     public TinyImageKNNClassifier(int size, int k) {
         this.SIZE = size;
         this.K = k;
 
+    }
+
+    /**
+     * Method used for initiating classifier on all training data.
+     *
+     * @throws FileSystemException Does what is says on the tin
+     */
+    protected void init() throws FileSystemException {
+        //Load all images
+        images = new VFSGroupDataset<>(CWD + "/OpenIMAJ-CW3/training", ImageUtilities.FIMAGE_READER);
+        //Instantiate tiny extractor class
+        TinyExtractor extractor = new TinyExtractor();
+
+        // The annotator used to create the model.
+        this.ann = KNNAnnotator.create(extractor, DoubleFVComparison.EUCLIDEAN, K);
+        // Trains the model.
+        this.ann.train(images);
     }
 
     /**
@@ -58,16 +76,16 @@ public class TinyImageKNNClassifier extends Classifier {
         FileWriter fileWriter = new FileWriter(filename);
 
         // Opens directory to get filenames. Then gets the filenames and sorts them numerically
-        File test = new File(CWD+"\\OpenIMAJ-CW3\\testing");
+        File test = new File(CWD + "\\OpenIMAJ-CW3\\testing");
         String[] filenames = test.list();
         sortFilenames(filenames);
 
         // Loops through files, then classifies them using the annotator and writes the results to the file.
         if (filenames != null) {
             for (String file : filenames) {
-                FImage image = ImageUtilities.readF(new File(".\\OpenIMAJ-CW3\\testing\\"+file));
+                FImage image = ImageUtilities.readF(new File(".\\OpenIMAJ-CW3\\testing\\" + file));
                 List<ScoredAnnotation<String>> result = ann.annotate(image);
-                fileWriter.write(String.format("%s %s\n",file, getClassification(result)));
+                fileWriter.write(String.format("%s %s\n", file, getClassification(result)));
             }
         }
         fileWriter.close();
@@ -117,21 +135,6 @@ public class TinyImageKNNClassifier extends Classifier {
     }
 
 
-    /**
-     * Method used for initiating classifier on all training data.
-     * @throws FileSystemException Does what is says on the tin
-     */
-    protected void init() throws FileSystemException {
-        images = new VFSGroupDataset<>(CWD+"/OpenIMAJ-CW3/training", ImageUtilities.FIMAGE_READER);
-        TinyExtractor extractor = new TinyExtractor();
-
-        // The annotator used to create the model.
-        this.ann = KNNAnnotator.create(extractor, DoubleFVComparison.EUCLIDEAN, K);
-        // Trains the model.
-        this.ann.train(images);
-    }
-
-
     private class TinyExtractor implements FeatureExtractor<DoubleFV, FImage> {
         /**
          * Class used to extract the features from the images. This is accomplished by first detecting if the image
@@ -140,7 +143,6 @@ public class TinyImageKNNClassifier extends Classifier {
          * concatenating each row of pixles.
          *
          * @param image The image to be preprocessed to have its features extracted.
-         *
          * @return The extracted feature vector used in the classifier.
          */
         public DoubleFV extractFeature(FImage image) {
@@ -156,13 +158,14 @@ public class TinyImageKNNClassifier extends Classifier {
 
             // Resizes the image
             output.processInplace(new ResizeProcessor(SIZE, SIZE));
-            // Subtracts the mean pixel value from the entire image
-//            output.processInplace(new MeanCenter());
 
+            // TODO CAN SOMEONE EXPLAIN WHY THIS CODE IS COMMENTED OUT, OR REMOVE IT
+            // Subtracts the mean pixel value from the entire image
+            // output.processInplace(new MeanCenter());
             // Creates the feature vector (1D vector)
-//            DoubleFV feature = new DoubleFV(output.getDoublePixelVector());
+            // DoubleFV feature = new DoubleFV(output.getDoublePixelVector());
             // Normalises the feature vector to make each pixel unit length
-//            feature.normaliseFV();
+            // feature.normaliseFV();
 
             return new DoubleFV(output.getDoublePixelVector());
         }

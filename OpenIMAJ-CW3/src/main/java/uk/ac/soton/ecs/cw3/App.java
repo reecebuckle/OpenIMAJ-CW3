@@ -1,36 +1,62 @@
 package uk.ac.soton.ecs.cw3;
 
+import org.apache.commons.vfs2.FileSystemException;
+
 import java.io.FileWriter;
 import java.io.IOException;
 
 /**
  * Hi team, hope you guys all got here!
- *
  */
 public class App {
 
-    public static void main( String[] args ) {
+    /**
+     * Used to run the classifiers respectively
+     *
+     * @param args
+     */
+    public static void main(String[] args) {
 
         try {
-
-            LinearClassifier linearClassifier = new LinearClassifier(4,8,500);
-            linearClassifier.trainClassifier();
-            linearClassifier.classifyImages("Linear Classifier Results.txt");
-
-
-            //FOR RUNNING KNN TASK 1
-//            TinyImageKNNClassifier tinyImageKNNClassifier = new TinyImageKNNClassifier(16, 18);
-//            tinyImageKNNClassifier.init();
-//            tinyImageKNNClassifier.classifyImages("Tiny Image Classifier Results.txt");
-//            testTinyImageKNN();
+            //runTinyImageKNNClassifier(); //TODO Uncomment to run
+            runLinearClassifier();
         } catch (IOException ioException) {
             ioException.printStackTrace();
         }
     }
 
     /**
+     * Method used for running the Linear Classifier (Task two)
+     *
+     * @throws IOException
+     */
+    public static void runLinearClassifier() throws IOException {
+        LinearClassifier linearClassifier = new LinearClassifier(4, 8, 5); //TODO SET THIS AS 500 CLUSTERS, 5 IS JUST FOR QUICK RUNNING
+        linearClassifier.init();
+        linearClassifier.classifyImages("Linear Classifier Results.txt");
+    }
+
+    /**
+     * Method used for running the Tiny Image KNN Classifier
+     */
+    public static void runTinyImageKNNClassifier() throws IOException {
+        TinyImageKNNClassifier tinyImageKNNClassifier = new TinyImageKNNClassifier(16, 18);
+        tinyImageKNNClassifier.init();
+        tinyImageKNNClassifier.classifyImages("Tiny Image Classifier Results.txt");
+        testTinyImageKNN();
+    }
+
+    /**
+     * TODO: Write Method used for testing the LibLinear Classifier
+     */
+    public static void testLinearClassifier() throws IOException {
+
+    }
+
+    /**
      * Method used for testing the tinyImageKNNClassifier to tune k and or small image size.
-     * @throws IOException Does what it says on the tin
+     *
+     * @throws IOException
      */
     public static void testTinyImageKNN() throws IOException {
 
@@ -50,7 +76,6 @@ public class App {
                 // Load the dataset
                 tinyImageKNNClassifier.setTestTrainSize(90, 10);
                 tinyImageKNNClassifier.splitData();
-
                 tinyImageKNNClassifier.trainClassifier();
 
                 String results = tinyImageKNNClassifier.testClassifier();

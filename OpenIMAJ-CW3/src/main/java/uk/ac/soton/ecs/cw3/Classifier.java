@@ -18,22 +18,23 @@ public class Classifier {
 
     private int TRAIN_SIZE = 100; // The default training size
     private int TEST_SIZE = 0; // The default testing size
-
-
     protected final String CWD = System.getProperty("user.dir"); // The current working directory
-
     GroupedDataset<String, VFSListDataset<FImage>, FImage> images; // The images extracted to train/test the classifier
     GroupedRandomSplitter<String, FImage> splits; // The data splits for training/testing
 
-    protected void classifyImages(String filename) throws IOException {}
-    protected void trainClassifier(){}
+    //TODO: Remove these abstract methods since they're different for each classifer??
+    protected void classifyImages(String filename) throws IOException {
+    }
+
+    protected void trainClassifier() {
+    }
 
 
     /**
      * Method used to adjust the training and testing sizes used to split the data for validation.
      *
      * @param TRAIN_SIZE The number of elements used to create the training set.
-     * @param TEST_SIZE The number of elements used to create the testing set.
+     * @param TEST_SIZE  The number of elements used to create the testing set.
      */
     protected void setTestTrainSize(int TRAIN_SIZE, int TEST_SIZE) {
         this.TRAIN_SIZE = TRAIN_SIZE;
@@ -82,10 +83,11 @@ public class Classifier {
     /**
      * Method used to split the data into training and testing sets. This is done using the classes TRAIN_SIZE and
      * TEST_SIZE.
+     *
      * @throws FileSystemException Throws an exception if the training set is not in the correct folder.
      */
     protected void splitData() throws FileSystemException {
-        images = new VFSGroupDataset<>(CWD+"/OpenIMAJ-CW3/training", ImageUtilities.FIMAGE_READER);
+        images = new VFSGroupDataset<>(CWD + "/OpenIMAJ-CW3/training", ImageUtilities.FIMAGE_READER);
         splits = new GroupedRandomSplitter<>(images, TRAIN_SIZE, 0, TEST_SIZE);
     }
 }
