@@ -13,11 +13,17 @@ public class App {
 
         try {
 
+            LinearClassifier linearClassifier = new LinearClassifier(4,8,500);
+            linearClassifier.trainClassifier();
+            linearClassifier.classifyImages("Linear Classifier Results.txt");
+
+            /**
             TinyImageKNNClassifier tinyImageKNNClassifier = new TinyImageKNNClassifier(16, 19);
             tinyImageKNNClassifier.trainClassifier();
             tinyImageKNNClassifier.classifyImages("Tiny Image Classifier Results.txt");
 
 //            testTinyImageKNN();
+             */
 
         } catch (IOException ioException) {
             ioException.printStackTrace();
