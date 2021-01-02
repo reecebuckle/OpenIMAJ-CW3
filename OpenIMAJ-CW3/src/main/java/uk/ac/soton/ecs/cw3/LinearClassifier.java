@@ -4,13 +4,6 @@ import de.bwaldvogel.liblinear.SolverType;
 import org.apache.commons.vfs2.FileSystemException;
 import org.openimaj.data.dataset.GroupedDataset;
 import org.openimaj.data.dataset.ListDataset;
-import org.openimaj.data.dataset.VFSGroupDataset;
-import org.openimaj.data.dataset.VFSListDataset;
-import org.openimaj.experiment.dataset.sampling.GroupSampler;
-import org.openimaj.experiment.evaluation.classification.ClassificationEvaluator;
-import org.openimaj.experiment.evaluation.classification.ClassificationResult;
-import org.openimaj.experiment.evaluation.classification.analysers.confusionmatrix.CMAnalyser;
-import org.openimaj.experiment.evaluation.classification.analysers.confusionmatrix.CMResult;
 import org.openimaj.feature.*;
 import org.openimaj.feature.local.LocalFeature;
 import org.openimaj.feature.local.LocalFeatureImpl;
@@ -22,119 +15,182 @@ import org.openimaj.image.feature.local.aggregate.BlockSpatialAggregator;
 import org.openimaj.image.pixel.sampling.RectangleSampler;
 import org.openimaj.image.processing.algorithm.MeanCenter;
 import org.openimaj.math.geometry.shape.Rectangle;
+import org.openimaj.ml.annotation.ScoredAnnotation;
 import org.openimaj.ml.annotation.linear.LiblinearAnnotator;
 import org.openimaj.ml.clustering.FloatCentroidsResult;
 import org.openimaj.ml.clustering.assignment.HardAssigner;
 import org.openimaj.ml.clustering.kmeans.FloatKMeans;
 import org.openimaj.util.pair.IntFloatPair;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
+import java.io.File;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.util.*;
 
-/**
- * You should develop a set of linear classifiers:
- * Use the LiblinearAnnotator class to automatically create 15 one-vs-all classifiers
- * Use a bag-of-visual-words feature based on fixed size densely-sampled pixel patches
- * <p>
- * We recommend that you start with 8x8 patches, sampled every 4 pixels in the x and y directions.
- * A sample of these should be clustered using K-Means to learn a vocabulary (try ~500 clusters to start).
- * You might want to consider mean-centring and normalising each patch before clustering/quantisation.
- * <p>
- * Note: we’re not asking you to use SIFT features here -
- * just take the pixels from the patches and flatten them into a vector &
- * then use vector quantisation to map each patch to a visual word.
- */
-public class LinearClassifier {
+public class LinearClassifier extends Classifier {
+    /**
+     * LinearClassifier takes patches of pixels from images and performs vector quantisation to map each patch
+     * to a visual word. A sample of these are clustered using K-Means to learn a vocabulary.
+     */
 
-    //Might not be necessary
-    private LiblinearAnnotator<FImage, String> annotator;
+    private final int STEP; // Pixels between patches
+    private final int SIZE; // Size of patches
+    private final int CLUSTERS; // Number of clusters in KNN
+
+    LiblinearAnnotator<FImage, String> ann; // The annotator used for training the model
 
     /**
-     * @param args
-     * @throws FileSystemException
-     * @implements LibLinearAnnotator http://openimaj.org/apidocs/org/openimaj/ml/annotation/linear/LiblinearAnnotator.html
+     * Constructor used to set parameters of patch extractor and number of clusters of KNN.
+     *
+     * @param step Number of steps between each patch in an image
+     * @param size Size of the patches
+     * @param clusters Number of clusters used in KNN
      */
-    public static void main(String[] args) throws FileSystemException {
-
-        //Load training dataset
-        //TODO: Implement a better way of loading the dataset and individual images, just using this as a default
-        GroupedDataset<String, VFSListDataset<FImage>, FImage> trainingDataset =
-                new VFSGroupDataset<FImage>(System.getProperty("user.dir") + "/OpenIMAJ-CW3/training", ImageUtilities.FIMAGE_READER);
-
-        //Instantiate patch extractor for densely-sampled pixel patches
-        //TODO: Write up patch extractor method
-        PatchExtractor patchExtractor = new PatchExtractor();
-        //Instantiate hard assigner
-        //TODO: Parse the trainingDataset of correct type
-        HardAssigner<float[], float[], IntFloatPair> assigner = trainQuantiser(trainingDataset,patchExtractor);
-
-        //Use Bag of Visual Words Extractor (no need for SIFT features as shown in Chapter 12)
-        FeatureExtractor<DoubleFV, FImage> extractor = new BOVWExtractor(patchExtractor,assigner);
-
-        //Use LiblinearAnnotator to construct and train classifier
-        LiblinearAnnotator<FImage, String> annotator = new LiblinearAnnotator<>(
-                extractor, LiblinearAnnotator.Mode.MULTICLASS, SolverType.L2R_L2LOSS_SVC, 1.0, 0.00001);
-
-        //Train the dataset using the openimaj's annotator
-        annotator.train(trainingDataset);
-
-        ClassificationEvaluator<CMResult<String>, String, FImage> eval =
-                new ClassificationEvaluator<CMResult<String>, String, FImage>(
-                        annotator, trainingDataset, new CMAnalyser<FImage, String>(CMAnalyser.Strategy.SINGLE));
-
-        Map<FImage, ClassificationResult<String>> guesses = eval.evaluate();
-        CMResult<String> result = eval.analyse(guesses);
-
-        System.out.println(result.getDetailReport());
-
+    public LinearClassifier(int step, int size, int clusters) {
+        this.STEP = step;
+        this.SIZE = size;
+        this.CLUSTERS = clusters;
     }
 
     /**
-     * Base code adapted from HardAssigner class provided in Chapter 12
-     * Not too sure about the exact methods and data types of this
-     * <p>
-     * TODO: To write hard assigner that can assign features (from patch extractor) to identifiers
+     * Method used to classify new images that outputs a text file containing the results.
+     *
+     * @param filename The name of the file to output the results to.
+     * @throws IOException Throws IO exception if test data is not present.
      */
-    public static HardAssigner<float[], float[], IntFloatPair> trainQuantiser(GroupedDataset<String, VFSListDataset<FImage>, FImage> trainingDataset, PatchExtractor extractor) {
+    @Override
+    protected void classifyImages(String filename) throws IOException {
 
-        //Some sort of list here to hold in features, as per Chap 12?
-        List<float[]> allkeys = new ArrayList<float[]>();
+        // Used to write the results to
+        FileWriter fileWriter = new FileWriter(filename);
 
-        //Iterate through training dataset (utilising Josh's GroupedDataset method)
-        for (FImage image : trainingDataset) {
-            List<LocalFeature<SpatialLocation, FloatFV>> sampleList = extractor.extract(image, 4, 8);
+        // Opens directory to get filenames. Then gets the filenames and sorts them numerically
+        File test = new File(CWD+"\\OpenIMAJ-CW3\\testing");
+        String[] filenames = test.list();
+        sortFilenames(filenames);
 
-            for (LocalFeature<SpatialLocation, FloatFV> localFeature : sampleList) {
-                allkeys.add(localFeature.getFeatureVector().values);
+        // Loops through files, then classifies them using the annotator and writes the results to the file.
+        if (filenames != null) {
+            for (String file : filenames) {
+                FImage image = ImageUtilities.readF(new File(".\\OpenIMAJ-CW3\\testing\\"+file));
+                List<ScoredAnnotation<String>> result = ann.annotate(image);
+                fileWriter.write(String.format("%s %s\n",file, getClassification(result)));
             }
         }
 
-        //A sample of these should be clustered using K-Means to learn a vocabulary (try ~500 clusters to start).
-        FloatKMeans km = FloatKMeans.createKDTreeEnsemble(500);
+        fileWriter.close();
+    }
+
+    /**
+     * Method used to train the classifier will default to using the whole training data if parameters are not set using
+     * setTestTrainSize(int TRAIN_SIZE, int TEST_SIZE) prior to training.
+     */
+    @Override
+    protected void trainClassifier() {
+
+        // Defaults to whole training set
+        if (splits == null) {
+            try {
+                splitData();
+            } catch (FileSystemException e) {
+                e.printStackTrace();
+            }
+        }
+
+        // Instantiate patch extractor for densely-sampled pixel patches
+        // The feature extractor used to preprocess each image.
+        PatchExtractor patchExtractor = new PatchExtractor();
+
+        // Instantiate hard assigner
+        HardAssigner<float[], float[], IntFloatPair> assigner = trainQuantiser(splits.getTrainingDataset(),patchExtractor);
+
+        // Use Bag of Visual Words Extractor
+        FeatureExtractor<DoubleFV, FImage> extractor = new BOVWExtractor(patchExtractor,assigner);
+
+        // Use LiblinearAnnotator to construct and train classifier
+        this.ann = new LiblinearAnnotator<>(
+                extractor, LiblinearAnnotator.Mode.MULTICLASS, SolverType.L2R_L2LOSS_SVC, 1.0, 0.00001);
+
+        // Trains the model.
+        this.ann.train(splits.getTrainingDataset());
+    }
+
+    /**
+     * Method used for testing the accuracy of the classifier
+     *
+     * @return Accuracy of the model
+     */
+    protected Double testClassifier() {
+        Double n_correct = 0.0;
+        int n = splits.getTestDataset().size();
+
+        // Iterate over test set and classify each image
+        // Compare against actual label
+        for(Map.Entry<String, ListDataset<FImage>> set : splits.getTestDataset().entrySet()) {
+            for(FImage image: set.getValue()) {
+                String predicted = ann.classify(image).getPredictedClasses().toString().replaceAll("\\[|\\]", "");
+                if (predicted.equals(set.getKey())) n_correct += 1;
+            }
+        }
+
+        return n_correct / n;
+    }
+
+    /**
+     * Method that quantises images using fixed size densely-sampled pixel patches
+     * The vectors are then clustered using K-Means to learn a vocabulary
+     *
+     * @param trainingDataset The dataset to be quantised
+     * @param extractor The extractor used to extract patches
+     * @return HardAssigner that assigns the features to identifiers
+     */
+    public HardAssigner<float[], float[], IntFloatPair> trainQuantiser(GroupedDataset<String, ListDataset<FImage>,FImage> trainingDataset, PatchExtractor extractor) {
+        List<float[]> allkeys = new ArrayList<float[]>();
+
+        // Iterate through training dataset extracting the patches
+        for (Map.Entry<String, ListDataset<FImage>> images : trainingDataset.entrySet()) {
+            for (FImage image : images.getValue()) {
+                List<LocalFeature<SpatialLocation, FloatFV>> sampleList = extractor.extract(image, STEP, SIZE);
+
+                for (LocalFeature<SpatialLocation, FloatFV> localFeature : sampleList) {
+                    allkeys.add(localFeature.getFeatureVector().values);
+                }
+            }
+        }
+
+        // Cluster to learn vocabulary
+        FloatKMeans km = FloatKMeans.createKDTreeEnsemble(CLUSTERS);
         float[][] datasource = allkeys.toArray(new float[][]{});
 
         FloatCentroidsResult result = km.cluster(datasource);
+
         return result.defaultHardAssigner();
     }
 
-    public static class PatchExtractor {
+    public class PatchExtractor {
 
-        public LocalFeature<SpatialLocation, FloatFV> getLocalFeature(FImage image, Rectangle rectangle) {
-            image.processInplace(new MeanCenter());
-            image.normalise();
-            FloatFV feature = new FloatFV(image.getFloatPixelVector());
-            return new LocalFeatureImpl<SpatialLocation, FloatFV>(
-                    new SpatialLocation(rectangle.x, rectangle.y), feature);
-        }
-
+        /**
+         * Method used to get features extracted from patches of an image
+         *
+         * @param image Image to extract the patches from
+         * @param step Distance between patches
+         * @param size Size of the patches
+         * @return List of the patch features
+         */
         public List<LocalFeature<SpatialLocation, FloatFV>> extract(FImage image, int step, int size) {
+
+            // Sampler used to return x,y coordinates of patches
             RectangleSampler sampler = new RectangleSampler(image, step, step, size, size);
             List<LocalFeature<SpatialLocation, FloatFV>> features = new ArrayList<LocalFeature<SpatialLocation, FloatFV>>();
 
-            for (Rectangle rectange : sampler) {
-                FImage patch = image.extractROI(rectange);
-                LocalFeature<SpatialLocation, FloatFV> localFeature = getLocalFeature(patch, rectange);
+            // Iterate over x,y coordinates of patches and calculate features
+            for (Rectangle rectangle : sampler) {
+                FImage patch = image.extractROI(rectangle);
+                patch.processInplace(new MeanCenter());
+                patch.normalise();
+                FloatFV feature = new FloatFV(patch.getFloatPixelVector());
+                LocalFeature<SpatialLocation, FloatFV> localFeature = new LocalFeatureImpl<SpatialLocation, FloatFV>(
+                        new SpatialLocation(rectangle.x, rectangle.y), feature);
                 features.add(localFeature);
             }
 
@@ -142,42 +198,38 @@ public class LinearClassifier {
         }
     }
 
-    /**
-     * Implements FeatureExtractor class
-     * Not too sure on this methods integration with "PatchExtractor", I know somewhere we need to
-     * Sample 8x8 patches every 4 pixels (in X and Y direction)
-     * <p>
-     * Adapted from chapter 12's PHOWExtractor Implementation:
-     * http://openimaj.org/tutorial/classification101.html
-     *
-     * @implements FeatureExtractor interface http://openimaj.org/apidocs/org/openimaj/feature/FeatureExtractor.html
-     * @implements BagOfVisualWords: http://openimaj.org/apidocs/org/openimaj/image/feature/local/aggregate/BagOfVisualWords.html
-     */
-    public static class BOVWExtractor implements FeatureExtractor<DoubleFV, FImage> {
+    public class BOVWExtractor implements FeatureExtractor<DoubleFV, FImage> {
         PatchExtractor patchExtractor;
         HardAssigner<float[], float[], IntFloatPair> assigner;
 
-        // Constructor
+        /**
+         * Constructor used to set parameters of patch extractor and assigner
+         *
+         * @param patchExtractor Extracts patch features from images
+         * @param assigner Assigns features to identifiers
+         */
         public BOVWExtractor(PatchExtractor patchExtractor, HardAssigner<float[], float[], IntFloatPair> assigner) {
             this.patchExtractor = patchExtractor;
             this.assigner = assigner;
         }
 
-        // Implemented Methods
+        /**
+         * Method used to extract BOVW feature from an image
+         *
+         * @param image Image to extract features from
+         * @return Bag-of-visual-words feature based on fixed size densely-sampled pixel patches
+         */
         public DoubleFV extractFeature(FImage image) {
-            //Extracts basic (hard-assignment) bag of visual words (BOVW) representations of an image given a list of
-            //local features and an HardAssigner
+            // Extracts basic (hard-assignment) bag of visual words (BOVW) representations of an image given a list of
+            // local features and an HardAssigner
             BagOfVisualWords<float[]> bovw = new BagOfVisualWords<float[]>(assigner);
 
             //Use BlockSpatialAggregator together with BagOfVisualWords
             BlockSpatialAggregator<float[], SparseIntFV> spatial =
                     new BlockSpatialAggregator<float[], SparseIntFV>(bovw, 2, 2);
 
-            //public SparseIntFV aggregate(List<? extends LocalFeature<?,? extends ArrayFeatureVector<T>>> features)
-            return spatial.aggregate(patchExtractor.extract(image, 4, 8), image.getBounds()).normaliseFV();
+            return spatial.aggregate(patchExtractor.extract(image, STEP, SIZE), image.getBounds()).normaliseFV();
         }
     }
+
 }
-
-
-
