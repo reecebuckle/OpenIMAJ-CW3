@@ -70,7 +70,6 @@ public class TinyImageKNNClassifier extends Classifier {
                 fileWriter.write(String.format("%s %s\n",file, getClassification(result)));
             }
         }
-
         fileWriter.close();
     }
 
@@ -118,7 +117,7 @@ public class TinyImageKNNClassifier extends Classifier {
     }
 
 
-/**  OLD CODE FROM MAX'S
+    /**  OLD CODE FROM MAX'S
      protected void init() throws FileSystemException {
         images = new VFSGroupDataset<>(CWD+"/OpenIMAJ-CW3/training", ImageUtilities.FIMAGE_READER);
         TinyExtractor extractor = new TinyExtractor();

@@ -32,7 +32,6 @@ public class LinearClassifier extends Classifier {
      * LinearClassifier takes patches of pixels from images and performs vector quantisation to map each patch
      * to a visual word. A sample of these are clustered using K-Means to learn a vocabulary.
      */
-
     private final int STEP; // Pixels between patches
     private final int SIZE; // Size of patches
     private final int CLUSTERS; // Number of clusters in KNN
