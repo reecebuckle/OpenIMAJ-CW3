@@ -33,7 +33,7 @@ public class App {
             //testTinyImageKNNClassifier();
             //runLinearClassifier();
             //testLinearClassifier();
-            runNaiveBayesClassifier();
+            testNaiveBayesClassifier();
 
             //Output running time
             long endTime = System.currentTimeMillis();
@@ -160,9 +160,11 @@ public class App {
 
     /**
      * Method used for testing Naives Bayes Classifier with PHOW Extractor
+     *
+     * @throws Exception (can be IO or error with annotator)
      */
     public static void testNaiveBayesClassifier() throws Exception {
-        NaiveBayesClassifier naiveBayesClassifier = new NaiveBayesClassifier(4, 8, 0.015f, 25);
+        NaiveBayesClassifier naiveBayesClassifier = new NaiveBayesClassifier(4, 8, 0.015f, 5);
 
         //Set training / testing split and split
         naiveBayesClassifier.setTestTrainSize(80, 20);
