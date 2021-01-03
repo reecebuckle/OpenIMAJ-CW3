@@ -105,7 +105,6 @@ public class LinearClassifier extends Classifier {
         // The feature extractor used to preprocess each image.
         PatchExtractor patchExtractor = new PatchExtractor();
 
-
         // Instantiate hard assigner
         HardAssigner<float[], float[], IntFloatPair> assigner = trainQuantiser(splits.getTrainingDataset(), patchExtractor);
 
@@ -122,8 +121,8 @@ public class LinearClassifier extends Classifier {
     }
 
     /**
-     *
-     * @return annotator if not not null
+     * @return Instantiated LiblinearAnnotator
+     * @throws Exception if annotator is null
      */
     public LiblinearAnnotator<FImage, String> getAnnotator() throws Exception {
         if (this.ann != null) {
@@ -157,41 +156,7 @@ public class LinearClassifier extends Classifier {
 
     /**
      * Method that quantises images using fixed size densely-sampled pixel patches
-     * The vectors are then clustered using K-Means to learn a vocabulary
-     * This method is used on a split dataset
-     *
-     * @param trainingDataset The dataset to be quantised
-     * @param extractor       The extractor used to extract patches
-     * @return HardAssigner that assigns the features to identifiers
-     */
-    public HardAssigner<float[], float[], IntFloatPair> trainQuantiser(GroupedDataset<String, ListDataset<FImage>, FImage> trainingDataset, PatchExtractor extractor) {
-        System.out.println("Now Assigning features to images with HardAssigner");
-
-        List<float[]> allkeys = new ArrayList<float[]>();
-
-        // Iterate through training dataset extracting the patches
-        for (Map.Entry<String, ListDataset<FImage>> images : trainingDataset.entrySet()) {
-            for (FImage image : images.getValue()) {
-                List<LocalFeature<SpatialLocation, FloatFV>> sampleList = extractor.extract(image, STEP, SIZE);
-
-                for (LocalFeature<SpatialLocation, FloatFV> localFeature : sampleList) {
-                    allkeys.add(localFeature.getFeatureVector().values);
-                }
-            }
-        }
-        System.out.println("Finished extracting images to assign features");
-
-        // Cluster to learn vocabulary
-        FloatKMeans km = FloatKMeans.createKDTreeEnsemble(CLUSTERS);
-        float[][] datasource = allkeys.toArray(new float[][]{});
-        FloatCentroidsResult result = km.cluster(datasource);
-        System.out.println("Finished Clustering");
-
-        return result.defaultHardAssigner();
-    }
-
-    /**
-     * Overloaded method when training the full training set (not splitting data)
+     * The vectors are then clustered using K-Means to learn a vocabularyOverloaded method when training the full training set (not splitting data)
      *
      * @param fullTrainingDataset The dataset to be quantised
      * @param extractor           The extractor used to extract patches
@@ -214,6 +179,39 @@ public class LinearClassifier extends Classifier {
             }
         }
         System.out.println("Finished etracting images to assign features");
+
+        // Cluster to learn vocabulary
+        FloatKMeans km = FloatKMeans.createKDTreeEnsemble(CLUSTERS);
+        float[][] datasource = allkeys.toArray(new float[][]{});
+        FloatCentroidsResult result = km.cluster(datasource);
+        System.out.println("Finished Clustering");
+
+        return result.defaultHardAssigner();
+    }
+
+    /**
+     * Overloaded method when training the a split dataset
+     *
+     * @param trainingDataset The dataset to be quantised
+     * @param extractor       The extractor used to extract patches
+     * @return HardAssigner that assigns the features to identifiers
+     */
+    public HardAssigner<float[], float[], IntFloatPair> trainQuantiser(GroupedDataset<String, ListDataset<FImage>, FImage> trainingDataset, PatchExtractor extractor) {
+        System.out.println("Now Assigning features to images with HardAssigner");
+
+        List<float[]> allkeys = new ArrayList<float[]>();
+
+        // Iterate through training dataset extracting the patches
+        for (Map.Entry<String, ListDataset<FImage>> images : trainingDataset.entrySet()) {
+            for (FImage image : images.getValue()) {
+                List<LocalFeature<SpatialLocation, FloatFV>> sampleList = extractor.extract(image, STEP, SIZE);
+
+                for (LocalFeature<SpatialLocation, FloatFV> localFeature : sampleList) {
+                    allkeys.add(localFeature.getFeatureVector().values);
+                }
+            }
+        }
+        System.out.println("Finished extracting images to assign features");
 
         // Cluster to learn vocabulary
         FloatKMeans km = FloatKMeans.createKDTreeEnsemble(CLUSTERS);

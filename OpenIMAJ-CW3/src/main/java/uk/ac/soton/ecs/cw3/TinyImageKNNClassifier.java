@@ -92,8 +92,8 @@ public class TinyImageKNNClassifier extends Classifier {
     }
 
     /**
-     *
-     * @return annotator if not not null
+     * @return Instantiated KNNAnnotator
+     * @throws Exception if annotator is null
      */
     public KNNAnnotator<FImage, String, DoubleFV> getAnnotator() throws Exception {
         if (this.ann != null) {

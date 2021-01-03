@@ -1,5 +1,6 @@
 package uk.ac.soton.ecs.cw3;
 
+import org.apache.commons.vfs2.FileSystemException;
 import org.openimaj.experiment.evaluation.classification.ClassificationResult;
 import org.openimaj.experiment.evaluation.classification.analysers.confusionmatrix.CMResult;
 import org.openimaj.image.FImage;
@@ -28,8 +29,11 @@ public class App {
             long startTime = System.currentTimeMillis();
 
             //TODO Uncomment to run
-            runTinyImageKNNClassifier();
+            //runTinyImageKNNClassifier();
+            //testTinyImageKNNClassifier();
             //runLinearClassifier();
+            //testLinearClassifier();
+            runNaiveBayesClassifier();
 
             //Output running time
             long endTime = System.currentTimeMillis();
@@ -70,6 +74,17 @@ public class App {
         linearClassifier.init();
         //Classify images with LibLinear Annotator
         linearClassifier.classifyImages("run2.txt", linearClassifier.getAnnotator());
+    }
+
+    /**
+     * Method used for running Naive Bayes Classifier with PHOW Extractor
+     *
+     * @throws Exception (can be IO or error with annotator)
+     */
+    public static void runNaiveBayesClassifier() throws Exception {
+        NaiveBayesClassifier naiveBayesClassifier = new NaiveBayesClassifier(4, 8, 0.015f, 5);
+        naiveBayesClassifier.init();
+        naiveBayesClassifier.classifyImages("naive_bayes_run3.txt", naiveBayesClassifier.getAnnotator());
     }
 
 
@@ -132,13 +147,29 @@ public class App {
      */
     public static void testLinearClassifier() throws Exception {
 
-        LinearClassifier linearClassifier = new LinearClassifier(4, 8, 500); //TODO SET THIS AS 500 CLUSTERS, 5 IS JUST FOR QUICK RUNNING
+        LinearClassifier linearClassifier = new LinearClassifier(4, 8, 50); //TODO SET THIS AS 500 CLUSTERS, 5 IS JUST FOR QUICK RUNNING
         // Set training / testing split and split
-        linearClassifier.setTestTrainSize(90, 10);
+        linearClassifier.setTestTrainSize(80, 20);
         linearClassifier.splitData();
         // Initialise classifier with a split dataset
         linearClassifier.initWithSplit();
+        // Test Classifier with Linear Classifier
         linearClassifier.testClassifier(linearClassifier.getAnnotator());
 
+    }
+
+    /**
+     * Method used for testing Naives Bayes Classifier with PHOW Extractor
+     */
+    public static void testNaiveBayesClassifier() throws Exception {
+        NaiveBayesClassifier naiveBayesClassifier = new NaiveBayesClassifier(4, 8, 0.015f, 25);
+
+        //Set training / testing split and split
+        naiveBayesClassifier.setTestTrainSize(80, 20);
+        naiveBayesClassifier.splitData();
+        //Initialise classifier with a split dataset
+        naiveBayesClassifier.initWithSplit();
+        //Test Classifier with NaiveBayes Classifier
+        naiveBayesClassifier.testClassifier(naiveBayesClassifier.getAnnotator());
     }
 }
