@@ -40,22 +40,6 @@ public class App {
     }
 
     /**
-     * Method used for running the Linear Classifier (Task two)
-     * Instantiates a Linear Classifier with <Step amount, Size, Cluster amount>
-     *
-     * @throws Exception (can be IO or error with annotator)
-     */
-    public static void runLinearClassifier() throws Exception {
-
-        //Instantiate a Linear Classifier with <Step amount, Size, Cluster amount>
-        LinearClassifier linearClassifier = new LinearClassifier(4, 8, 2); //TODO SET THIS AS 500 CLUSTERS, 5 IS JUST FOR QUICK RUNNING
-        //Train classifier with full dataset
-        linearClassifier.init();
-        //Classify images with LibLinear Annotator
-        linearClassifier.classifyImages("Linear Classifier Results.txt", linearClassifier.getAnnotator());
-    }
-
-    /**
      * Method used for running the Tiny Image KNN Classifier
      * InstantiateS tiny image KNN classifier of <size 16, K Clusters>
      *
@@ -68,25 +52,25 @@ public class App {
         //Train classifier with full dataset
         tinyImageKNNClassifier.init();
         //Classify with KNN Annotator
-        tinyImageKNNClassifier.classifyImages("Tiny Image Classifier Results.txt", tinyImageKNNClassifier.getAnnotator());
+        tinyImageKNNClassifier.classifyImages("run1.txt", tinyImageKNNClassifier.getAnnotator());
     }
 
     /**
-     * TODO: Write Method used for testing the LibLinear Classifier
+     * Method used for running the Linear Classifier (Task two)
+     * Instantiates a Linear Classifier with <Step amount, Size, Cluster amount>
      *
      * @throws Exception (can be IO or error with annotator)
      */
-    public static void testLinearClassifier() throws Exception {
+    public static void runLinearClassifier() throws Exception {
 
-        LinearClassifier linearClassifier = new LinearClassifier(4, 8, 5); //TODO SET THIS AS 500 CLUSTERS, 5 IS JUST FOR QUICK RUNNING
-        // Set training / testing split and split
-        linearClassifier.setTestTrainSize(90, 10);
-        linearClassifier.splitData();
-        // Initialise classifier with a split dataset
-        linearClassifier.initWithSplit();
-        // TODO: Finish writing test classifier here
-
+        //Instantiate a Linear Classifier with <Step amount, Size, Cluster amount>
+        LinearClassifier linearClassifier = new LinearClassifier(4, 8, 500); //TODO SET THIS AS 500 CLUSTERS, 5 IS JUST FOR QUICK RUNNING
+        //Train classifier with full dataset
+        linearClassifier.init();
+        //Classify images with LibLinear Annotator
+        linearClassifier.classifyImages("run2.txt", linearClassifier.getAnnotator());
     }
+
 
     /**
      * Method used for testing the tinyImageKNNClassifier to tune k and or small image size.
@@ -138,5 +122,22 @@ public class App {
         }
 
         fileWriter.close();
+    }
+
+    /**
+     * Method used for self testing of the Linear Classifier by splitting the dataset 90/10
+     *
+     * @throws Exception (can be IO or error with annotator)
+     */
+    public static void testLinearClassifier() throws Exception {
+
+        LinearClassifier linearClassifier = new LinearClassifier(4, 8, 500); //TODO SET THIS AS 500 CLUSTERS, 5 IS JUST FOR QUICK RUNNING
+        // Set training / testing split and split
+        linearClassifier.setTestTrainSize(90, 10);
+        linearClassifier.splitData();
+        // Initialise classifier with a split dataset
+        linearClassifier.initWithSplit();
+        linearClassifier.testClassifier(linearClassifier.getAnnotator());
+
     }
 }

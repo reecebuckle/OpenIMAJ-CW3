@@ -165,7 +165,7 @@ public class LinearClassifier extends Classifier {
      * @return HardAssigner that assigns the features to identifiers
      */
     public HardAssigner<float[], float[], IntFloatPair> trainQuantiser(GroupedDataset<String, ListDataset<FImage>, FImage> trainingDataset, PatchExtractor extractor) {
-        System.out.print("Now Assigning features to images with HardAssigner");
+        System.out.println("Now Assigning features to images with HardAssigner");
 
         List<float[]> allkeys = new ArrayList<float[]>();
 
@@ -179,12 +179,13 @@ public class LinearClassifier extends Classifier {
                 }
             }
         }
+        System.out.println("Finished extracting images to assign features");
 
         // Cluster to learn vocabulary
         FloatKMeans km = FloatKMeans.createKDTreeEnsemble(CLUSTERS);
         float[][] datasource = allkeys.toArray(new float[][]{});
-
         FloatCentroidsResult result = km.cluster(datasource);
+        System.out.println("Finished Clustering");
 
         return result.defaultHardAssigner();
     }
@@ -198,8 +199,8 @@ public class LinearClassifier extends Classifier {
      * @override
      */
     public HardAssigner<float[], float[], IntFloatPair> trainQuantiser(VFSGroupDataset<FImage> fullTrainingDataset, PatchExtractor extractor) {
-        System.out.print("Now Assigning features to images with HardAssigner");
-        
+        System.out.println("Now Assigning features to images with HardAssigner");
+
         List<float[]> allkeys = new ArrayList<float[]>();
 
         // Iterate through training dataset extracting the patches
@@ -212,14 +213,13 @@ public class LinearClassifier extends Classifier {
                 }
             }
         }
+        System.out.println("Finished etracting images to assign features");
 
         // Cluster to learn vocabulary
         FloatKMeans km = FloatKMeans.createKDTreeEnsemble(CLUSTERS);
         float[][] datasource = allkeys.toArray(new float[][]{});
-
         FloatCentroidsResult result = km.cluster(datasource);
-
-        System.out.println();
+        System.out.println("Finished Clustering");
 
         return result.defaultHardAssigner();
     }

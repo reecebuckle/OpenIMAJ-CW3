@@ -38,7 +38,7 @@ public class Classifier {
      */
 
     protected void classifyImages(String filename, Annotator ann) throws IOException {
-
+        System.out.println("Now Classifying Images");
         // Used to write the results to
         FileWriter fileWriter = new FileWriter(filename);
 
@@ -135,6 +135,9 @@ public class Classifier {
         // Evaluates the results
         Map<FImage, ClassificationResult<String>> guesses = eval.evaluate();
         CMResult<String> result = eval.analyse(guesses);
+
+        //print out report
+        System.out.println(result.getDetailReport());
 
         return result.getSummaryReport();
     }
