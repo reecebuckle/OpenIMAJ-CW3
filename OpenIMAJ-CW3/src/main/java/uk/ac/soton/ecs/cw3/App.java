@@ -38,7 +38,7 @@ public class App {
             //Output running time
             long endTime = System.currentTimeMillis();
             NumberFormat formatter = new DecimalFormat("#0.00000");
-            System.out.print("Execution time is " + formatter.format((endTime - startTime) / 1000d) + " seconds");
+            System.out.println("Execution time is " + formatter.format((endTime - startTime) / 1000d) + " seconds");
         } catch (IOException ioException) {
             ioException.printStackTrace();
         }

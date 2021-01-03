@@ -134,7 +134,7 @@ public class NaiveBayesClassifier extends Classifier {
      * @return HardAssigner that assigns the features to identifiers
      */
     public HardAssigner<byte[], float[], IntFloatPair> trainQuantiser(VFSGroupDataset<FImage> trainingDataset, final DenseSIFT denseSIFT) {
-        System.out.print("Now Assigning features to images with HardAssigner");
+        System.out.println("Now Assigning features to images with HardAssigner");
 
         final AtomicReference<List<LocalFeatureList<ByteDSIFTKeypoint>>> allkeys = new AtomicReference<>(new ArrayList<>());
 
@@ -163,7 +163,7 @@ public class NaiveBayesClassifier extends Classifier {
      * @return HardAssigner that assigns the features to identifiers
      */
     public HardAssigner<byte[], float[], IntFloatPair> trainQuantiser(GroupedDataset<String, ListDataset<FImage>, FImage> trainingDataset, final DenseSIFT denseSIFT) {
-        System.out.print("Now Assigning features to images with HardAssigner");
+        System.out.println("Now Assigning features to images with HardAssigner");
 
         final AtomicReference<List<LocalFeatureList<ByteDSIFTKeypoint>>> allkeys = new AtomicReference<>(new ArrayList<>());
 
