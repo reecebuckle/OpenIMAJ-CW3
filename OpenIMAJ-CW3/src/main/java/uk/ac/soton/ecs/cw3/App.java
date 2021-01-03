@@ -27,8 +27,9 @@ public class App {
         try {
             long startTime = System.currentTimeMillis();
 
-            //runTinyImageKNNClassifier(); //TODO Uncomment to run
-            runLinearClassifier();
+            //TODO Uncomment to run
+            runTinyImageKNNClassifier();
+            //runLinearClassifier();
 
             //Output running time
             long endTime = System.currentTimeMillis();
