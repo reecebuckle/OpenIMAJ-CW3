@@ -43,7 +43,6 @@ public class TinyImageKNNClassifier extends Classifier {
     public TinyImageKNNClassifier(int size, int k) {
         this.SIZE = size;
         this.K = k;
-
     }
 
     /**
@@ -52,6 +51,7 @@ public class TinyImageKNNClassifier extends Classifier {
      * @throws FileSystemException Does what is says on the tin
      */
     protected void init() throws FileSystemException {
+        System.out.println("Running Tiny Image KNN Classifier on full training set");
         //Load all images
         images = new VFSGroupDataset<>(CWD + "/OpenIMAJ-CW3/training", ImageUtilities.FIMAGE_READER);
         //Instantiate tiny extractor class
@@ -59,44 +59,18 @@ public class TinyImageKNNClassifier extends Classifier {
 
         // The annotator used to create the model.
         this.ann = KNNAnnotator.create(extractor, DoubleFVComparison.EUCLIDEAN, K);
+
         // Trains the model.
+        System.out.println("Training Tiny Image KNN Annotator with full dataset for a robust model");
         this.ann.train(images);
-    }
-
-    /**
-     * Method used to classify new images that outputs a text file containing the results.
-     *
-     * @param filename The name of the file to output the results to.
-     * @throws IOException Throws IO exception if test data is not present.
-     */
-    @Override
-    protected void classifyImages(String filename) throws IOException {
-
-        // Used to write the results to
-        FileWriter fileWriter = new FileWriter(filename);
-
-        // Opens directory to get filenames. Then gets the filenames and sorts them numerically
-        File test = new File(CWD + "\\OpenIMAJ-CW3\\testing");
-        String[] filenames = test.list();
-        sortFilenames(filenames);
-
-        // Loops through files, then classifies them using the annotator and writes the results to the file.
-        if (filenames != null) {
-            for (String file : filenames) {
-                FImage image = ImageUtilities.readF(new File(".\\OpenIMAJ-CW3\\testing\\" + file));
-                List<ScoredAnnotation<String>> result = ann.annotate(image);
-                fileWriter.write(String.format("%s %s\n", file, getClassification(result)));
-            }
-        }
-        fileWriter.close();
     }
 
     /**
      * Method used to train the classifier will default to using the whole training data if parameters are not set using
      * setTestTrainSize(int TRAIN_SIZE, int TEST_SIZE) prior to training.
      */
-    @Override
-    protected void trainClassifier() {
+    protected void initWithSplit() {
+        System.out.println("Running Tiny Image KNN Classifier on split training set for testing purposes");
 
         // Defaults to whole training set
         if (splits == null) {
@@ -109,31 +83,25 @@ public class TinyImageKNNClassifier extends Classifier {
 
         // The feature extractor used to preprocess each image.
         TinyExtractor extractor = new TinyExtractor();
-
         // The annotator used to create the model.
         this.ann = KNNAnnotator.create(extractor, DoubleFVComparison.EUCLIDEAN, K);
-        // Trains the model.
+
+        // Trains the model with a split dataset
+        System.out.println("Training Tiny Image KNN Annotator with split training dataset");
         this.ann.train(splits.getTrainingDataset());
     }
 
     /**
-     * Method used for testing the accuracy of the classifier and returns the summary report.
      *
-     * @return The summary report of the classifier using the train/test split
+     * @return annotator if not not null
      */
-    protected String testClassifier() {
-        // The evaluator that is passed the test split to evaluate the models performance
-        ClassificationEvaluator<CMResult<String>, String, FImage> eval =
-                new ClassificationEvaluator<>(
-                        ann, splits.getTestDataset(), new CMAnalyser<FImage, String>(CMAnalyser.Strategy.SINGLE));
-
-        // Evaluates the results
-        Map<FImage, ClassificationResult<String>> guesses = eval.evaluate();
-        CMResult<String> result = eval.analyse(guesses);
-
-        return result.getSummaryReport();
+    public KNNAnnotator<FImage, String, DoubleFV> getAnnotator() throws Exception {
+        if (this.ann != null) {
+            return this.ann;
+        } else {
+            throw new Exception("Annotator is null / not been set");
+        }
     }
-
 
     private class TinyExtractor implements FeatureExtractor<DoubleFV, FImage> {
         /**

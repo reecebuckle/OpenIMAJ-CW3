@@ -40,8 +40,7 @@ public class LinearClassifier extends Classifier {
     private final int STEP; // Pixels between patches
     private final int SIZE; // Size of patches
     private final int CLUSTERS; // Number of clusters in KNN
-
-    LiblinearAnnotator<FImage, String> ann; // The annotator used for training the model
+    private LiblinearAnnotator<FImage, String> ann; // The annotator used for training the model
 
     /**
      * Constructor used to set parameters of patch extractor and number of clusters of KNN.
@@ -62,6 +61,7 @@ public class LinearClassifier extends Classifier {
      * @throws FileSystemException Throws error if training folder is not present/suitable format
      */
     protected void init() throws FileSystemException {
+        System.out.println("Running Linear Classifier on full dataset");
         //Load all images
         images = new VFSGroupDataset<>(CWD + "/OpenIMAJ-CW3/training", ImageUtilities.FIMAGE_READER);
 
@@ -80,44 +80,17 @@ public class LinearClassifier extends Classifier {
                 extractor, LiblinearAnnotator.Mode.MULTICLASS, SolverType.L2R_L2LOSS_SVC, 1.0, 0.00001);
 
         // Trains the model
+        System.out.println("Training Linear Annotator with full dataset for a robust model");
         this.ann.train(images);
     }
 
-    /**
-     * Method used to classify new images that outputs a text file containing the results.
-     *
-     * @param filename The name of the file to output the results to.
-     * @throws IOException Throws IO exception if test data is not present.
-     */
-    @Override
-    protected void classifyImages(String filename) throws IOException {
-
-        // Used to write the results to
-        FileWriter fileWriter = new FileWriter(filename);
-
-        // Opens directory to get filenames. Then gets the filenames and sorts them numerically
-        File test = new File(CWD + "\\OpenIMAJ-CW3\\testing");
-        String[] filenames = test.list();
-        sortFilenames(filenames);
-
-        // Loops through files, then classifies them using the annotator and writes the results to the file.
-        if (filenames != null) {
-            for (String file : filenames) {
-                FImage image = ImageUtilities.readF(new File(".\\OpenIMAJ-CW3\\testing\\" + file));
-                List<ScoredAnnotation<String>> result = ann.annotate(image);
-                fileWriter.write(String.format("%s %s\n", file, getClassification(result)));
-            }
-        }
-
-        fileWriter.close();
-    }
 
     /**
      * Method used to train the classifier will default to using the whole training data if parameters are not set using
      * setTestTrainSize(int TRAIN_SIZE, int TEST_SIZE) prior to training.
      */
-    @Override
-    protected void trainClassifier() {
+    protected void initWithSplit() {
+        System.out.println("Running Linear Classifier with a split training set (for self testing purposes)");
 
         // Defaults to whole training set
         if (splits == null) {
@@ -132,6 +105,7 @@ public class LinearClassifier extends Classifier {
         // The feature extractor used to preprocess each image.
         PatchExtractor patchExtractor = new PatchExtractor();
 
+
         // Instantiate hard assigner
         HardAssigner<float[], float[], IntFloatPair> assigner = trainQuantiser(splits.getTrainingDataset(), patchExtractor);
 
@@ -143,16 +117,29 @@ public class LinearClassifier extends Classifier {
                 extractor, LiblinearAnnotator.Mode.MULTICLASS, SolverType.L2R_L2LOSS_SVC, 1.0, 0.00001);
 
         // Trains the model.
+        System.out.println("Training Linear Annotator with split training dataset");
         this.ann.train(splits.getTrainingDataset());
     }
 
+    /**
+     *
+     * @return annotator if not not null
+     */
+    public LiblinearAnnotator<FImage, String> getAnnotator() throws Exception {
+        if (this.ann != null) {
+            return this.ann;
+        } else {
+            throw new Exception("Annotator is null / not been set");
+        }
+    }
 
     /**
-     * Method used for testing the accuracy of the classifier
+     * Method used for testing the accuracy of the linear classifier specifically
      *
      * @return Accuracy of the model
      */
-    protected Double testClassifier() {
+    protected Double testLinearClassifier() {
+        System.out.println("Testing accuracy of the Linear Classifier");
         Double n_correct = 0.0;
         int n = splits.getTestDataset().size();
 
@@ -227,6 +214,8 @@ public class LinearClassifier extends Classifier {
         float[][] datasource = allkeys.toArray(new float[][]{});
 
         FloatCentroidsResult result = km.cluster(datasource);
+
+        System.out.println();
 
         return result.defaultHardAssigner();
     }
