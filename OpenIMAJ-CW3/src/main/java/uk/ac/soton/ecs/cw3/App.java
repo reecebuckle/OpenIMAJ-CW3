@@ -9,6 +9,8 @@ import org.openimaj.ml.annotation.linear.LiblinearAnnotator;
 import javax.sound.sampled.Line;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.text.DecimalFormat;
+import java.text.NumberFormat;
 
 /**
  * Hi team, hope you guys all got here!
@@ -23,14 +25,15 @@ public class App {
     public static void main(String[] args) throws Exception {
 
         try {
-            //Output running time
-            long startTime = System.nanoTime();
+            long startTime = System.currentTimeMillis();
 
             //runTinyImageKNNClassifier(); //TODO Uncomment to run
             runLinearClassifier();
 
-            long stopTime = System.nanoTime();
-            System.out.println("Total running time: " + (stopTime - startTime));
+            //Output running time
+            long endTime = System.currentTimeMillis();
+            NumberFormat formatter = new DecimalFormat("#0.00000");
+            System.out.print("Execution time is " + formatter.format((endTime - startTime) / 1000d) + " seconds");
         } catch (IOException ioException) {
             ioException.printStackTrace();
         }

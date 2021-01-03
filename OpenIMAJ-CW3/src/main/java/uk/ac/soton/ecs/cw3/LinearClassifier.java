@@ -165,6 +165,8 @@ public class LinearClassifier extends Classifier {
      * @return HardAssigner that assigns the features to identifiers
      */
     public HardAssigner<float[], float[], IntFloatPair> trainQuantiser(GroupedDataset<String, ListDataset<FImage>, FImage> trainingDataset, PatchExtractor extractor) {
+        System.out.print("Now Assigning features to images with HardAssigner");
+
         List<float[]> allkeys = new ArrayList<float[]>();
 
         // Iterate through training dataset extracting the patches
@@ -196,6 +198,8 @@ public class LinearClassifier extends Classifier {
      * @override
      */
     public HardAssigner<float[], float[], IntFloatPair> trainQuantiser(VFSGroupDataset<FImage> fullTrainingDataset, PatchExtractor extractor) {
+        System.out.print("Now Assigning features to images with HardAssigner");
+        
         List<float[]> allkeys = new ArrayList<float[]>();
 
         // Iterate through training dataset extracting the patches
