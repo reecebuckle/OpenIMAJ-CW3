@@ -45,22 +45,6 @@ public class App {
     }
 
     /**
-     * Method used for running the Tiny Image KNN Classifier
-     * InstantiateS tiny image KNN classifier of <size 16, K Clusters>
-     *
-     * @throws Exception (can be IO or error with annotator)
-     */
-    public static void runTinyImageKNNClassifier() throws Exception {
-
-        //Instantiate tiny image KNN classifier of <size 16, K Clusters>
-        TinyImageKNNClassifier tinyImageKNNClassifier = new TinyImageKNNClassifier(16, 18);
-        //Train classifier with full dataset
-        tinyImageKNNClassifier.init();
-        //Classify with KNN Annotator
-        tinyImageKNNClassifier.classifyImages("run1.txt", tinyImageKNNClassifier.getAnnotator());
-    }
-
-    /**
      * Method used for running the Linear Classifier (Task two)
      * Instantiates a Linear Classifier with <Step amount, Size, Cluster amount>
      *
@@ -77,6 +61,23 @@ public class App {
     }
 
     /**
+     * Method used for self testing of the Linear Classifier by splitting the dataset 90/10
+     *
+     * @throws Exception (can be IO or error with annotator)
+     */
+    public static void testLinearClassifier() throws Exception {
+
+        LinearClassifier linearClassifier = new LinearClassifier(4, 8, 50); //TODO SET THIS AS 500 CLUSTERS, 5 IS JUST FOR QUICK RUNNING
+        // Set training / testing split and split
+        linearClassifier.setTestTrainSize(80, 20);
+        linearClassifier.splitData();
+        // Initialise classifier with a split dataset
+        linearClassifier.initWithSplit();
+        // Test Classifier with Linear Classifier
+        linearClassifier.testClassifier(linearClassifier.getAnnotator());
+    }
+
+    /**
      * Method used for running Naive Bayes Classifier with PHOW Extractor
      *
      * @throws Exception (can be IO or error with annotator)
@@ -87,6 +88,39 @@ public class App {
         naiveBayesClassifier.classifyImages("naive_bayes_run3.txt", naiveBayesClassifier.getAnnotator());
     }
 
+
+    /**
+     * Method used for testing Naives Bayes Classifier with PHOW Extractor
+     *
+     * @throws Exception (can be IO or error with annotator)
+     */
+    public static void testNaiveBayesClassifier() throws Exception {
+        //NaiveBayesClassifier naiveBayesClassifier = new NaiveBayesClassifier(2, 4, 0.015f, 25); //TODO try changing these params - results in discord - returns 61%
+        NaiveBayesClassifier naiveBayesClassifier = new NaiveBayesClassifier(2, 4, 0.015f, 25); //TODO Default params (written by Turgut)
+        //Set training / testing split and split
+        naiveBayesClassifier.setTestTrainSize(80, 20);
+        naiveBayesClassifier.splitData();
+        //Initialise classifier with a split dataset
+        naiveBayesClassifier.initWithSplit();
+        //Test Classifier with NaiveBayes Classifier
+        naiveBayesClassifier.testClassifier(naiveBayesClassifier.getAnnotator());
+    }
+
+    /**
+     * Method used for running the Tiny Image KNN Classifier
+     * InstantiateS tiny image KNN classifier of <size 16, K Clusters>
+     *
+     * @throws Exception (can be IO or error with annotator)
+     */
+    public static void runTinyImageKNNClassifier() throws Exception {
+
+        //Instantiate tiny image KNN classifier of <size 16, K Clusters>
+        TinyImageKNNClassifier tinyImageKNNClassifier = new TinyImageKNNClassifier(16, 18);
+        //Train classifier with full dataset
+        tinyImageKNNClassifier.init();
+        //Classify with KNN Annotator
+        tinyImageKNNClassifier.classifyImages("run1.txt", tinyImageKNNClassifier.getAnnotator());
+    }
 
     /**
      * Method used for testing the tinyImageKNNClassifier to tune k and or small image size.
@@ -140,38 +174,4 @@ public class App {
         fileWriter.close();
     }
 
-    /**
-     * Method used for self testing of the Linear Classifier by splitting the dataset 90/10
-     *
-     * @throws Exception (can be IO or error with annotator)
-     */
-    public static void testLinearClassifier() throws Exception {
-
-        LinearClassifier linearClassifier = new LinearClassifier(4, 8, 50); //TODO SET THIS AS 500 CLUSTERS, 5 IS JUST FOR QUICK RUNNING
-        // Set training / testing split and split
-        linearClassifier.setTestTrainSize(80, 20);
-        linearClassifier.splitData();
-        // Initialise classifier with a split dataset
-        linearClassifier.initWithSplit();
-        // Test Classifier with Linear Classifier
-        linearClassifier.testClassifier(linearClassifier.getAnnotator());
-
-    }
-
-    /**
-     * Method used for testing Naives Bayes Classifier with PHOW Extractor
-     *
-     * @throws Exception (can be IO or error with annotator)
-     */
-    public static void testNaiveBayesClassifier() throws Exception {
-        NaiveBayesClassifier naiveBayesClassifier = new NaiveBayesClassifier(4, 8, 0.015f, 5);
-
-        //Set training / testing split and split
-        naiveBayesClassifier.setTestTrainSize(80, 20);
-        naiveBayesClassifier.splitData();
-        //Initialise classifier with a split dataset
-        naiveBayesClassifier.initWithSplit();
-        //Test Classifier with NaiveBayes Classifier
-        naiveBayesClassifier.testClassifier(naiveBayesClassifier.getAnnotator());
-    }
 }
