@@ -168,8 +168,10 @@ public class LinearClassifier extends Classifier {
 
         List<float[]> allkeys = new ArrayList<float[]>();
 
+        GroupedRandomSplitter<String, FImage> splitter = new GroupedRandomSplitter<String, FImage>(fullTrainingDataset,10,0,0);
+
         // Iterate through training dataset extracting the patches
-        for (Map.Entry<String, VFSListDataset<FImage>> images : fullTrainingDataset.entrySet()) {
+        for (Map.Entry<String, ListDataset<FImage>> images : splitter.getTrainingDataset().entrySet()) {
             for (FImage image : images.getValue()) {
                 List<LocalFeature<SpatialLocation, FloatFV>> sampleList = extractor.extract(image, STEP, SIZE);
 

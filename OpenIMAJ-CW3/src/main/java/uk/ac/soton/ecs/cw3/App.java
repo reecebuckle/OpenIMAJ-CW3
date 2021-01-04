@@ -32,8 +32,8 @@ public class App {
             //runTinyImageKNNClassifier();
             //testTinyImageKNNClassifier();
             //runLinearClassifier();
-            //testLinearClassifier();
-            testNaiveBayesClassifier();
+            testLinearClassifier();
+            //testNaiveBayesClassifier();
 
             //Output running time
             long endTime = System.currentTimeMillis();
@@ -67,7 +67,7 @@ public class App {
      */
     public static void testLinearClassifier() throws Exception {
 
-        LinearClassifier linearClassifier = new LinearClassifier(4, 8, 50); //TODO SET THIS AS 500 CLUSTERS, 5 IS JUST FOR QUICK RUNNING
+        LinearClassifier linearClassifier = new LinearClassifier(4, 8, 500); //TODO SET THIS AS 500 CLUSTERS, 5 IS JUST FOR QUICK RUNNING
         // Set training / testing split and split
         linearClassifier.setTestTrainSize(80, 20);
         linearClassifier.splitData();
