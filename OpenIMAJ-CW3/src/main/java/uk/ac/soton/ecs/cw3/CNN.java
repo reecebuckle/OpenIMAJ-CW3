@@ -70,7 +70,7 @@ public class CNN {
 
 
         setUpTrainTest();
-//        rESNet50 = resNETFromScratch(); // run this one please
+        //rESNet50 = resNETFromScratch(); // run this one please
         nASNet = NABSNetPredefined();
 
     }
@@ -220,8 +220,8 @@ public class CNN {
         InputSplit trainData = filesInDirSplit[0];
         InputSplit testData = filesInDirSplit[1];
 
-        ImageRecordReader trainRecordReader = new ImageRecordReader(height, width, channels, labelGenerator);
-        ImageRecordReader testRecordReader = new ImageRecordReader(height, width, channels, labelGenerator);
+        ImageRecordReader trainRecordReader = new ImageRecordReader(height, width, 3, labelGenerator);
+        ImageRecordReader testRecordReader = new ImageRecordReader(height, width, 3, labelGenerator);
 
         // Can add more transforms to augment the data
         ImageTransform transform = new MultiImageTransform(randNumGen);
@@ -237,9 +237,5 @@ public class CNN {
         trainIter.setPreProcessor(normalizer);
         testIter.setPreProcessor(normalizer);
 
-    }
-
-    public static void main(String[] args) {
-        System.out.println("Hello World");
     }
 }

@@ -28,9 +28,9 @@ public class App {
             //testLinearClassifier();
 
             //runNaiveBayesClassifier();
-            //testNaiveBayesClassifier();
+            testNaiveBayesClassifier();
 
-            runCNN();
+            //runCNN();
 
             //Output running time
             long endTime = System.currentTimeMillis();
@@ -74,7 +74,7 @@ public class App {
      */
     public static void testLinearClassifier() throws Exception {
 
-        LinearClassifier linearClassifier = new LinearClassifier(4, 8, 500); //TODO SET THIS AS 500 CLUSTERS, 5 IS JUST FOR QUICK RUNNING
+        LinearClassifier linearClassifier = new LinearClassifier(5, 8, 500); //TODO SET THIS AS 500 CLUSTERS, 5 IS JUST FOR QUICK RUNNING
         // Set training / testing split and split
         linearClassifier.setTestTrainSize(80, 20);
         linearClassifier.splitData();
@@ -103,9 +103,9 @@ public class App {
      */
     public static void testNaiveBayesClassifier() throws Exception {
         //NaiveBayesClassifier naiveBayesClassifier = new NaiveBayesClassifier(2, 4, 0.015f, 25); //TODO try changing these params - results in discord - returns 61%
-        NaiveBayesClassifier naiveBayesClassifier = new NaiveBayesClassifier(2, 4, 0.015f, 25); //TODO Default params (written by Turgut)
+        NaiveBayesClassifier naiveBayesClassifier = new NaiveBayesClassifier(2, 8, 0.015f, 500); //TODO Default params (written by Turgut)
         //Set training / testing split and split
-        naiveBayesClassifier.setTestTrainSize(80, 20);
+        naiveBayesClassifier.setTestTrainSize(90, 10);
         naiveBayesClassifier.splitData();
         //Initialise classifier with a split dataset
         naiveBayesClassifier.initWithSplit();
@@ -136,7 +136,7 @@ public class App {
      */
     public static void testTinyImageKNN() throws Exception {
 
-        FileWriter fileWriter = new FileWriter("Tiny Image Classifier Tuning 70-30.csv");
+        FileWriter fileWriter = new FileWriter("Tiny Image Classifier Tuning.csv");
         fileWriter.write("K, accuracy, error\n");
 
         for (int k = 1; k <= 50; k++) {
