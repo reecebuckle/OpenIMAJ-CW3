@@ -13,7 +13,6 @@ import org.openimaj.image.FImage;
 import org.openimaj.image.ImageUtilities;
 import org.openimaj.ml.annotation.Annotator;
 import org.openimaj.ml.annotation.ScoredAnnotation;
-
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;

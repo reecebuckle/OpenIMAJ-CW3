@@ -1,24 +1,6 @@
 package uk.ac.soton.ecs.cw3;
 
-<<<<<<< HEAD
-import org.apache.commons.vfs2.FileSystemException;
-import org.openimaj.experiment.evaluation.classification.ClassificationResult;
-import org.openimaj.experiment.evaluation.classification.analysers.confusionmatrix.CMResult;
-import org.openimaj.image.FImage;
-import org.openimaj.ml.annotation.basic.KNNAnnotator;
-import org.openimaj.ml.annotation.linear.LiblinearAnnotator;
-
-import javax.sound.sampled.Line;
 import java.io.FileWriter;
-=======
-import org.openimaj.image.DisplayUtilities;
-import org.openimaj.image.MBFImage;
-import org.openimaj.image.colour.ColourSpace;
-import org.openimaj.image.colour.RGBColour;
-import org.openimaj.image.processing.convolution.FGaussianConvolve;
-import org.openimaj.image.typography.hershey.HersheyFont;
-
->>>>>>> Max-Neuural-nets
 import java.io.IOException;
 import java.text.DecimalFormat;
 import java.text.NumberFormat;
@@ -51,6 +33,19 @@ public class App {
             System.out.println("Execution time is " + formatter.format((endTime - startTime) / 1000d) + " seconds");
         } catch (IOException ioException) {
             ioException.printStackTrace();
+        }
+    }
+
+    /**
+     *
+     */
+    public static void runCNN() {
+        try {
+            CNN cnn = new CNN();
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        } catch (IOException e) {
+            e.printStackTrace();
         }
     }
 
@@ -182,15 +177,5 @@ public class App {
         }
 
         fileWriter.close();
-    public static void main( String[] args ) {
-
-        try {
-            CNN cnn = new CNN();
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
     }
-
 }

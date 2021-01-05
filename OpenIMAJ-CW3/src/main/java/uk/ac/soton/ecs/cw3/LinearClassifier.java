@@ -5,9 +5,11 @@ import org.apache.commons.vfs2.FileSystemException;
 import org.openimaj.data.dataset.GroupedDataset;
 import org.openimaj.data.dataset.ListDataset;
 import org.openimaj.data.dataset.VFSGroupDataset;
-import org.openimaj.data.dataset.VFSListDataset;
 import org.openimaj.experiment.dataset.split.GroupedRandomSplitter;
-import org.openimaj.feature.*;
+import org.openimaj.feature.DoubleFV;
+import org.openimaj.feature.FeatureExtractor;
+import org.openimaj.feature.FloatFV;
+import org.openimaj.feature.SparseIntFV;
 import org.openimaj.feature.local.LocalFeature;
 import org.openimaj.feature.local.LocalFeatureImpl;
 import org.openimaj.feature.local.SpatialLocation;
@@ -18,18 +20,15 @@ import org.openimaj.image.feature.local.aggregate.BlockSpatialAggregator;
 import org.openimaj.image.pixel.sampling.RectangleSampler;
 import org.openimaj.image.processing.algorithm.MeanCenter;
 import org.openimaj.math.geometry.shape.Rectangle;
-import org.openimaj.ml.annotation.ScoredAnnotation;
-import org.openimaj.ml.annotation.basic.KNNAnnotator;
 import org.openimaj.ml.annotation.linear.LiblinearAnnotator;
 import org.openimaj.ml.clustering.FloatCentroidsResult;
 import org.openimaj.ml.clustering.assignment.HardAssigner;
 import org.openimaj.ml.clustering.kmeans.FloatKMeans;
 import org.openimaj.util.pair.IntFloatPair;
 
-import java.io.File;
-import java.io.FileWriter;
-import java.io.IOException;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
 
 /**
  * LinearClassifier takes patches of pixels from images and performs vector quantisation to map each patch

@@ -64,14 +64,14 @@ public class CNN {
     private ZooModel rESNet50;
 
     private int lastLayerIndex;
-    
 
-    public CNN () throws IOException, InterruptedException {
+
+    public CNN() throws IOException, InterruptedException {
 
 
         setUpTrainTest();
         rESNet50 = resNETFromScratch(); // run this one please
-//        nASNet = NABSNetPredefined();
+        // nASNet = NABSNetPredefined();
 
     }
 
@@ -87,7 +87,7 @@ public class CNN {
         Layer lastLayer = net.getLayers()[lastLayerIndex];
         String lastLayerName = lastLayer.conf().getLayer().getLayerName();
 
-        Layer featureLayer = net.getLayers()[lastLayerIndex-1];
+        Layer featureLayer = net.getLayers()[lastLayerIndex - 1];
         String featureLayerName = featureLayer.conf().getLayer().getLayerName();
 
         FineTuneConfiguration fineTuneConfiguration = new FineTuneConfiguration.Builder()
@@ -102,17 +102,17 @@ public class CNN {
                 .setFeatureExtractor(featureLayerName)
                 .addLayer("connector",
                         new DenseLayer.Builder()
-                            .nIn(1000)
-                            .nOut(256)
-                            .activation(Activation.RELU)
-                            .build(),
+                                .nIn(1000)
+                                .nOut(256)
+                                .activation(Activation.RELU)
+                                .build(),
                         lastLayerName)
                 .addLayer("new_predictions",
                         new OutputLayer.Builder(LossFunctions.LossFunction.NEGATIVELOGLIKELIHOOD)
-                            .activation(Activation.SOFTMAX)
-                            .nIn(256)
-                            .nOut(classes)
-                            .build(),
+                                .activation(Activation.SOFTMAX)
+                                .nIn(256)
+                                .nOut(classes)
+                                .build(),
                         "connector")
                 .setOutputs("new_predictions")
                 .build();
@@ -235,7 +235,7 @@ public class CNN {
 
     }
 
-    public static void main (String[] args) {
+    public static void main(String[] args) {
         System.out.println("Hello World");
     }
 }
