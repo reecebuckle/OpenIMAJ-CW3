@@ -121,7 +121,7 @@ public class CNN {
         nasNetTransfer.setListeners(
                 new ScoreIterationListener(1),
                 new PerformanceListener(1),
-                new TimeIterationListener(1));
+                new TimeIterationListener((epochs*classes*100)/batchSize));
 
         double lowest = 10;
 
@@ -162,7 +162,7 @@ public class CNN {
         ZooModel resNet50 = ResNet50.builder()
                 .numClasses(classes)
                 .seed(seed)
-                .inputShape(new int[]{channels, height, width})
+                .inputShape(new int[]{1, height, width})
                 .updater(new Adam(1e-3))
                 .build();
 
@@ -172,7 +172,7 @@ public class CNN {
         net.setListeners(
                 new ScoreIterationListener(1),
                 new PerformanceListener(1),
-                new TimeIterationListener(1));
+                new TimeIterationListener((epochs*classes*100)/batchSize));
 
         System.out.println("\n --- Training Network ---");
 
