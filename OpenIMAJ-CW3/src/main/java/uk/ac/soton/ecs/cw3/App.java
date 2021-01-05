@@ -19,13 +19,17 @@ public class App {
 
         try {
             long startTime = System.currentTimeMillis();
-
             //TODO Uncomment to run
+
             //runTinyImageKNNClassifier();
             //testTinyImageKNNClassifier();
+
             //runLinearClassifier();
             //testLinearClassifier();
+
+            //runNaiveBayesClassifier();
             //testNaiveBayesClassifier();
+
             runCNN();
 
             //Output running time

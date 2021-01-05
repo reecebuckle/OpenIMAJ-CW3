@@ -101,6 +101,8 @@
       <artifactId>commons-math3</artifactId>
       <version>3.1.1</version>
     </dependency>
+
+    <!-- CNN dependencies -->
     <dependency>
       <groupId>org.deeplearning4j</groupId>
       <artifactId>deeplearning4j-core</artifactId>
@@ -133,6 +135,7 @@
       <version>1.0.0-beta7</version>
       <classifier>windows-x86_64-avx2</classifier>
     </dependency>
+    <!-- end of CNN dependencies -->
 
     <!-- <dependency>
 			<groupId>org.openimaj</groupId>
@@ -204,33 +207,10 @@
       </plugin>
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
-        <artifactId>maven-resources-plugin</artifactId>
-        <version>2.6</version>
-        <executions>
-          <execution>
-            <phase>test</phase>
-            <goals>
-              <goal>resources</goal>
-              <goal>testResources</goal>
-            </goals>
-          </execution>
-        </executions>
-      </plugin>
-      <plugin>
-        <groupId>org.apache.maven.plugins</groupId>
-        <artifactId>maven-project-info-reports-plugin</artifactId>
-        <version>2.7</version>
-      </plugin>
-      <plugin>
-        <groupId>org.apache.maven.plugins</groupId>
-        <artifactId>maven-clean-plugin</artifactId>
-        <version>2.5</version>
+        <artifactId>maven-compiler-plugin</artifactId>
         <configuration>
-          <filesets>
-            <fileset>
-              <directory>src/main/generated-groovy-stubs</directory>
-            </fileset>
-          </filesets>
+          <source>14</source>
+          <target>14</target>
         </configuration>
       </plugin>
     </plugins>

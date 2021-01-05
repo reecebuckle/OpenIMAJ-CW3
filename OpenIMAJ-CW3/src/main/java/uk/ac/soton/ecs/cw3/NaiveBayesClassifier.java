@@ -22,6 +22,7 @@ import org.openimaj.ml.clustering.ByteCentroidsResult;
 import org.openimaj.ml.clustering.assignment.HardAssigner;
 import org.openimaj.ml.clustering.kmeans.ByteKMeans;
 import org.openimaj.util.pair.IntFloatPair;
+
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
