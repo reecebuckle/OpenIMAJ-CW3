@@ -24,8 +24,9 @@ public class App {
             //runTinyImageKNNClassifier();
             //testTinyImageKNNClassifier();
             //runLinearClassifier();
-            testLinearClassifier();
+            //testLinearClassifier();
             //testNaiveBayesClassifier();
+            runCNN();
 
             //Output running time
             long endTime = System.currentTimeMillis();
@@ -37,16 +38,13 @@ public class App {
     }
 
     /**
+     * Runs Max's implementation of Convolutional Neural Network
      *
+     * @throws IOException
+     * @throws InterruptedException
      */
-    public static void runCNN() {
-        try {
+    public static void runCNN() throws IOException, InterruptedException {
             CNN cnn = new CNN();
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
     }
 
     /**
