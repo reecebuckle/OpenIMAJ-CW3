@@ -208,7 +208,7 @@ public class CNN {
         return resNet50;
     }
 
-    private void setUpTrainTest() throws IOException, InterruptedException {
+    private void setUpTrainTest() throws IOException {
 
         File directory = new File(baseDir, "training/");
         FileSplit fileSplit = new FileSplit(directory, allowedExtensions, randNumGen);
