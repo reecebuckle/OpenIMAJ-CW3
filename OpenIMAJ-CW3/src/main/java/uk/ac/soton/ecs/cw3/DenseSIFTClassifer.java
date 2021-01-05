@@ -20,15 +20,13 @@ import org.openimaj.image.ImageUtilities;
 import org.openimaj.image.feature.dense.gradient.dsift.ByteDSIFTKeypoint;
 import org.openimaj.image.feature.dense.gradient.dsift.DenseSIFT;
 import org.openimaj.image.feature.dense.gradient.dsift.PyramidDenseSIFT;
-import org.openimaj.image.annotation.evaluation.datasets.Caltech101;
-import org.openimaj.image.annotation.evaluation.datasets.Caltech101.Record;
 import org.openimaj.image.feature.local.aggregate.BagOfVisualWords;
 import org.openimaj.image.feature.local.aggregate.BlockSpatialAggregator;
-import org.openimaj.ml.annotation.Annotated;
 import org.openimaj.ml.annotation.linear.LiblinearAnnotator;
 import org.openimaj.ml.clustering.ByteCentroidsResult;
 import org.openimaj.ml.clustering.assignment.HardAssigner;
 import org.openimaj.ml.clustering.kmeans.ByteKMeans;
+import org.openimaj.ml.kernel.HomogeneousKernelMap;
 import org.openimaj.util.pair.IntFloatPair;
 
 import java.util.ArrayList;
@@ -63,6 +61,9 @@ public class DenseSIFTClassifer {
         Map<FImage, ClassificationResult<String>> guesses = eval.evaluate();
 
         CMResult<String> result = eval.analyse(guesses);
+
+        System.out.println(result.getDetailReport());
+        System.out.println(result.getSummaryReport());
     }
 
     public static HardAssigner<byte[], float[], IntFloatPair> trainQuantiser(
