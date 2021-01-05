@@ -59,15 +59,26 @@ public class App {
      *     
      * @throws FileSystemException
      */
-    public static void runDenseSIFT() throws FileSystemException {
+    public static void runDenseSIFT() throws IOException {
+        //Split dataset into training and testing
         GroupedDataset<String, VFSListDataset<FImage>, FImage> images =
                 new VFSGroupDataset<>(System.getProperty("user.dir") + "/OpenIMAJ-CW3/training", ImageUtilities.FIMAGE_READER);
 
         GroupedRandomSplitter<String, FImage> splitter = new GroupedRandomSplitter<String, FImage>(images, 80, 0, 20);
 
+        //Instantiate classifier
         DenseSIFTClassifer classifier = new DenseSIFTClassifer(300, 5,1000);
+
+        //Train classifier
         LiblinearAnnotator<FImage,String> ann = classifier.constructAnnotator(splitter.getTrainingDataset());
+
+        //Test classifier
         classifier.getReport(ann, splitter.getTestDataset());
+
+        /**
+         * @// TODO: 05/01/2021 uncomment below and run to obtain predictions for classifier
+         */
+        // classifier.classifyImages("run3_densesift.txt", ann);
     }
 
 

@@ -39,7 +39,7 @@ import java.util.Map;
  * DenseSIFTClassifier takes SIFT features from images and performs vector quantisation to map each feature
  * into visual words. Spatial histograms of the visual word occurrences are build using K-means clustering.
  */
-public class DenseSIFTClassifer {
+public class DenseSIFTClassifer extends Classifier {
 
     private final int CLUSTERS;
     private final int SIFTSTEP;
