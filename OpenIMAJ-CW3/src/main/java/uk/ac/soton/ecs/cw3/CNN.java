@@ -54,7 +54,7 @@ public class CNN {
     private final int batchSize = 10;
     private static final int classes = 15;
 
-    private static final int epochs = 10;
+    private static final int epochs = 1;
 
 
     private static DataSetIterator trainIter;
