@@ -70,8 +70,8 @@ public class CNN {
 
 
         setUpTrainTest();
-        rESNet50 = resNETFromScratch(); // run this one please
-//        nASNet = NABSNetPredefined();
+//        rESNet50 = resNETFromScratch(); // run this one please
+        nASNet = NABSNetPredefined();
 
     }
 
@@ -120,8 +120,6 @@ public class CNN {
 
         nasNetTransfer.setListeners(
                 new ScoreIterationListener(1),
-                new EvaluativeListener(trainIter, 1),
-                new EvaluativeListener(testIter, 1),
                 new PerformanceListener(1),
                 new TimeIterationListener(1));
 
@@ -141,6 +139,10 @@ public class CNN {
                 ModelSerializer.writeModel(nasNetTransfer, modelFilename, false);
             }
         }
+
+        nasNetTransfer.setListeners(
+                new EvaluativeListener(trainIter, 1),
+                new EvaluativeListener(testIter, 1));
 
         ModelSerializer.writeModel(nasNetTransfer, "Final_NASNet.zip", false);
 
@@ -169,8 +171,6 @@ public class CNN {
 
         net.setListeners(
                 new ScoreIterationListener(1),
-                new EvaluativeListener(trainIter, 1),
-                new EvaluativeListener(testIter, 1),
                 new PerformanceListener(1),
                 new TimeIterationListener(1));
 
@@ -191,6 +191,10 @@ public class CNN {
             }
         }
 
+        net.setListeners(
+                new EvaluativeListener(trainIter, 1),
+                new EvaluativeListener(testIter, 1)
+        );
 
         ModelSerializer.writeModel(net, "Final_RESNet50.zip", false);
 
