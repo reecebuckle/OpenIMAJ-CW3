@@ -54,7 +54,7 @@ public class CNN {
     private final int batchSize = 10;
     private static final int classes = 15;
 
-    private static final int epochs = 10;
+    private static final int epochs = 1;
 
 
     private static DataSetIterator trainIter;
@@ -172,13 +172,13 @@ public class CNN {
         net.setListeners(
                 new ScoreIterationListener(1),
                 new PerformanceListener(1),
-                new TimeIterationListener((epochs*classes*100)/batchSize));
+                new TimeIterationListener((5*classes*100)/batchSize));
 
         System.out.println("\n --- Training Network ---");
 
         double lowest = 10;
 
-        for (int i = 0; i < epochs; i++) {
+        for (int i = 0; i < 5; i++) {
             trainIter.reset();
             net.fit(trainIter);
             System.out.println("epoch: " + i + " score: " + net.score());
