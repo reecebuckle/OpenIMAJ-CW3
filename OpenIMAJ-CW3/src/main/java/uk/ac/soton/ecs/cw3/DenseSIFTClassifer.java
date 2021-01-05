@@ -21,7 +21,7 @@ import org.openimaj.image.feature.dense.gradient.dsift.ByteDSIFTKeypoint;
 import org.openimaj.image.feature.dense.gradient.dsift.DenseSIFT;
 import org.openimaj.image.feature.dense.gradient.dsift.PyramidDenseSIFT;
 import org.openimaj.image.feature.local.aggregate.BagOfVisualWords;
-import org.openimaj.image.feature.local.aggregate.BlockSpatialAggregator;
+import org.openimaj.image.feature.local.aggregate.PyramidSpatialAggregator;
 import org.openimaj.ml.annotation.linear.LiblinearAnnotator;
 import org.openimaj.ml.clustering.ByteCentroidsResult;
 import org.openimaj.ml.clustering.assignment.HardAssigner;
@@ -30,6 +30,7 @@ import org.openimaj.ml.kernel.HomogeneousKernelMap;
 import org.openimaj.util.pair.IntFloatPair;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
@@ -41,13 +42,22 @@ public class DenseSIFTClassifer {
 
         GroupedRandomSplitter<String, FImage> splitter = new GroupedRandomSplitter<String, FImage>(images, 80, 0, 20);
 
+        // Construct feature extractor
         DenseSIFT dsift = new DenseSIFT(5, 7);
+
+        // Apply feature extractor to windows of size 7
         PyramidDenseSIFT<FImage> pdsift = new PyramidDenseSIFT<FImage>(dsift, 6f, 7);
 
+        //
         HardAssigner<byte[], float[], IntFloatPair> assigner =
                 trainQuantiser(GroupedUniformRandomisedSampler.sample(splitter.getTrainingDataset(), 30), pdsift);
 
         FeatureExtractor<DoubleFV, FImage> extractor = new PHOWExtractor(pdsift, assigner);
+
+        HomogeneousKernelMap map = new HomogeneousKernelMap(
+                HomogeneousKernelMap.KernelType.Chi2, HomogeneousKernelMap.WindowType.Rectangular);
+
+        extractor = map.createWrappedExtractor(extractor);
 
         LiblinearAnnotator<FImage, String> ann = new LiblinearAnnotator<FImage, String>(
                 extractor, LiblinearAnnotator.Mode.MULTICLASS, SolverType.L2R_L2LOSS_SVC, 1.0, 0.00001);
@@ -75,6 +85,10 @@ public class DenseSIFTClassifer {
             allkeys.add(pdsift.getByteKeypoints(0.005f));
         }
 
+        // Randomize keys
+        Collections.shuffle(allkeys);
+
+        // Take first 1000 keys
         if (allkeys.size() > 10000)
             allkeys = allkeys.subList(0, 10000);
 
@@ -101,8 +115,8 @@ public class DenseSIFTClassifer {
 
             BagOfVisualWords<byte[]> bovw = new BagOfVisualWords<byte[]>(assigner);
 
-            BlockSpatialAggregator<byte[], SparseIntFV> spatial = new BlockSpatialAggregator<byte[], SparseIntFV>(
-                    bovw, 2, 2);
+            PyramidSpatialAggregator<byte[], SparseIntFV> spatial = new PyramidSpatialAggregator<byte[], SparseIntFV>(
+                    bovw, 2, 4);
 
             return spatial.aggregate(pdsift.getByteKeypoints(0.015f), image.getBounds()).normaliseFV();
         }
