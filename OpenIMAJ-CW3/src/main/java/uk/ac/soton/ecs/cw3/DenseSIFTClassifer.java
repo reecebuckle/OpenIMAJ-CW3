@@ -35,18 +35,71 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
+/**
+ * DenseSIFTClassifier takes SIFT features from images and performs vector quantisation to map each feature
+ * into visual words. Spatial histograms of the visual word occurrences are build using K-means clustering.
+ */
 public class DenseSIFTClassifer {
 
     private final int CLUSTERS;
     private final int SIFTSTEP;
     private final int SIFTFEATURES;
 
+    /**
+     * Constructor used to set various
+     * @param clusters number of visual words in the vocabulary
+     * @param siftStep step size for the SIFT features
+     * @param siftFeatures max number of SIFT features taken from all the images
+     */
     public DenseSIFTClassifer(int clusters, int siftStep, int siftFeatures) {
         this.CLUSTERS = clusters;
         this.SIFTSTEP = siftStep;
         this.SIFTFEATURES = siftFeatures;
     }
 
+    /**
+     * Method used for training and returning an annotator
+     * @param dataset the training dataset on which to train the annotator
+     * @return the annotator for predicting the label of new images
+     */
+    public LiblinearAnnotator<FImage,String>constructAnnotator(GroupedDataset<String, ListDataset<FImage>, FImage> dataset) {
+
+        // Construct feature extractor
+        DenseSIFT dsift = new DenseSIFT(SIFTSTEP, 7);
+
+        // Apply feature extractor to windows of size 7
+        PyramidDenseSIFT<FImage> pdsift = new PyramidDenseSIFT<FImage>(dsift, 6f, 7);
+
+        System.out.println("Obtaining SIFT features from images and clustering.");
+        // Perform K-Means clustering on features
+        HardAssigner<byte[], float[], IntFloatPair> assigner =
+                trainQuantiser(GroupedUniformRandomisedSampler.sample(dataset, 30), pdsift);
+
+        System.out.println("Running BoVW feature extractor...");
+        // Feature extractor to train classifier
+        FeatureExtractor<DoubleFV, FImage> extractor = new PHOWExtractor(pdsift, assigner);
+
+        HomogeneousKernelMap map = new HomogeneousKernelMap(
+                HomogeneousKernelMap.KernelType.Chi2, HomogeneousKernelMap.WindowType.Rectangular);
+
+        System.out.println("Creating HomogeneuosKernelMap...");
+        extractor = map.createWrappedExtractor(extractor);
+
+        System.out.println("Training the linear classifier...");
+        // Construct and train linear classifier
+        LiblinearAnnotator<FImage, String> ann = new LiblinearAnnotator<FImage, String>(
+                extractor, LiblinearAnnotator.Mode.MULTICLASS, SolverType.L2R_L2LOSS_SVC, 1.0, 0.00001);
+
+        ann.train(dataset);
+
+        return ann;
+    }
+
+    /**
+     * Method used to display detailed reports on the accuracy of a model
+     * @param ann the model to test
+     * @param dataset the dataset on which to test the model
+     */
     public void getReport(LiblinearAnnotator<FImage,String> ann, GroupedDataset<String, ListDataset<FImage>, FImage> dataset) {
         // Obtain accuracy of classifier
         ClassificationEvaluator<CMResult<String>, String, FImage> eval =
@@ -61,36 +114,12 @@ public class DenseSIFTClassifer {
         System.out.println(result.getSummaryReport());
     }
 
-    public LiblinearAnnotator<FImage,String>constructAnnotator(GroupedDataset<String, ListDataset<FImage>, FImage> dataset) {
-
-        // Construct feature extractor
-        DenseSIFT dsift = new DenseSIFT(SIFTSTEP, 7);
-
-        // Apply feature extractor to windows of size 7
-        PyramidDenseSIFT<FImage> pdsift = new PyramidDenseSIFT<FImage>(dsift, 6f, 7);
-
-        // Perform K-Means clustering on features
-        HardAssigner<byte[], float[], IntFloatPair> assigner =
-                trainQuantiser(GroupedUniformRandomisedSampler.sample(dataset, 30), pdsift);
-
-        // Feature extractor to train classifier
-        FeatureExtractor<DoubleFV, FImage> extractor = new PHOWExtractor(pdsift, assigner);
-
-        HomogeneousKernelMap map = new HomogeneousKernelMap(
-                HomogeneousKernelMap.KernelType.Chi2, HomogeneousKernelMap.WindowType.Rectangular);
-
-        extractor = map.createWrappedExtractor(extractor);
-
-        // Construct and train linear classifier
-        LiblinearAnnotator<FImage, String> ann = new LiblinearAnnotator<FImage, String>(
-                extractor, LiblinearAnnotator.Mode.MULTICLASS, SolverType.L2R_L2LOSS_SVC, 1.0, 0.00001);
-
-        ann.train(dataset);
-
-        return ann;
-    }
-
-    /** Method to perform K-Means clustering on a sample of SIFT features */
+    /**
+     * Method to perform K-Means clustering on a sample of SIFT features
+     * @param sample the sample of images
+     * @param pdsift the pyramid sift feature extractor
+     * @return
+     */
     private HardAssigner<byte[], float[], IntFloatPair> trainQuantiser(
             GroupedDataset<String, ListDataset<FImage>,FImage> sample, PyramidDenseSIFT<FImage> pdsift) {
         List<LocalFeatureList<ByteDSIFTKeypoint>> allkeys = new ArrayList<LocalFeatureList<ByteDSIFTKeypoint>>();
@@ -107,6 +136,7 @@ public class DenseSIFTClassifer {
         if (allkeys.size() > SIFTFEATURES)
             allkeys = allkeys.subList(0, SIFTFEATURES);
 
+        System.out.println("Clustering...");
         // Cluster the features into separate classes
         ByteKMeans km = ByteKMeans.createKDTreeEnsemble(CLUSTERS);
         DataSource<byte[]> datasource = new LocalFeatureListDataSource<ByteDSIFTKeypoint, byte[]>(allkeys);
@@ -115,7 +145,7 @@ public class DenseSIFTClassifer {
         return result.defaultHardAssigner();
     }
 
-    // Feature extractor to train classifier
+
     private class PHOWExtractor implements FeatureExtractor<DoubleFV, FImage> {
         PyramidDenseSIFT<FImage> pdsift;
         HardAssigner<byte[], float[], IntFloatPair> assigner;
@@ -126,8 +156,11 @@ public class DenseSIFTClassifer {
         }
 
         @Override
-        public DoubleFV extractFeature(FImage object) {
-            FImage image = object.getImage();
+        /**
+         * Extracts the BoVW features for an image
+         * @param image the image to extract features from
+         */
+        public DoubleFV extractFeature(FImage image) {
             pdsift.analyseImage(image);
 
             /**
