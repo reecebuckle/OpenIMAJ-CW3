@@ -5,6 +5,7 @@ import org.apache.commons.vfs2.FileSystemException;
 import org.openimaj.data.dataset.GroupedDataset;
 import org.openimaj.data.dataset.ListDataset;
 import org.openimaj.data.dataset.VFSGroupDataset;
+import org.openimaj.data.dataset.VFSListDataset;
 import org.openimaj.experiment.dataset.split.GroupedRandomSplitter;
 import org.openimaj.feature.DoubleFV;
 import org.openimaj.feature.FeatureExtractor;
@@ -27,6 +28,7 @@ import org.openimaj.ml.clustering.kmeans.FloatKMeans;
 import org.openimaj.util.pair.IntFloatPair;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
@@ -167,15 +169,15 @@ public class LinearClassifier extends Classifier {
 
         List<float[]> allkeys = new ArrayList<float[]>();
 
-        GroupedRandomSplitter<String, FImage> splitter = new GroupedRandomSplitter<String, FImage>(fullTrainingDataset,10,0,0);
-
         // Iterate through training dataset extracting the patches
-        for (Map.Entry<String, ListDataset<FImage>> images : splitter.getTrainingDataset().entrySet()) {
+        for (Map.Entry<String, VFSListDataset<FImage>> images : fullTrainingDataset.entrySet()) {
             for (FImage image : images.getValue()) {
-                List<LocalFeature<SpatialLocation, FloatFV>> sampleList = extractor.extract(image, STEP, SIZE);
 
-                for (LocalFeature<SpatialLocation, FloatFV> localFeature : sampleList) {
-                    allkeys.add(localFeature.getFeatureVector().values);
+                // 10 random samples are extracted from each image
+                List<LocalFeature<SpatialLocation, FloatFV>> sampleList = extractor.extract(image, STEP, SIZE);
+                Collections.shuffle(sampleList);
+                for(int i = 0; i < 10; i++) {
+                    allkeys.add(sampleList.get(i).getFeatureVector().values);
                 }
             }
         }
@@ -205,10 +207,12 @@ public class LinearClassifier extends Classifier {
         // Iterate through training dataset extracting the patches
         for (Map.Entry<String, ListDataset<FImage>> images : trainingDataset.entrySet()) {
             for (FImage image : images.getValue()) {
-                List<LocalFeature<SpatialLocation, FloatFV>> sampleList = extractor.extract(image, STEP, SIZE);
 
-                for (LocalFeature<SpatialLocation, FloatFV> localFeature : sampleList) {
-                    allkeys.add(localFeature.getFeatureVector().values);
+                // 10 random samples are extracted from each image
+                List<LocalFeature<SpatialLocation, FloatFV>> sampleList = extractor.extract(image, STEP, SIZE);
+                Collections.shuffle(sampleList);
+                for(int i = 0; i < 10; i++) {
+                    allkeys.add(sampleList.get(i).getFeatureVector().values);
                 }
             }
         }
@@ -227,12 +231,12 @@ public class LinearClassifier extends Classifier {
     public class PatchExtractor {
 
         /**
-         * Method used to get features extracted from patches of an image
+         * Method used to get features from an image in the form of patches
          *
          * @param image Image to extract the patches from
          * @param step  Distance between patches
          * @param size  Size of the patches
-         * @return List of the patch features
+         * @return List of the patches
          */
         public List<LocalFeature<SpatialLocation, FloatFV>> extract(FImage image, int step, int size) {
 
@@ -240,14 +244,18 @@ public class LinearClassifier extends Classifier {
             RectangleSampler sampler = new RectangleSampler(image, step, step, size, size);
             List<LocalFeature<SpatialLocation, FloatFV>> features = new ArrayList<LocalFeature<SpatialLocation, FloatFV>>();
 
-            // Iterate over x,y coordinates of patches and calculate features
+            // Iterate over x,y coordinates of patches and add patch to list
             for (Rectangle rectangle : sampler) {
+                // Obtain patch and normalise
                 FImage patch = image.extractROI(rectangle);
                 patch.processInplace(new MeanCenter());
                 patch.normalise();
+
+                // Concatenate rows of patch and pack into a feature vector with its location
                 FloatFV feature = new FloatFV(patch.getFloatPixelVector());
                 LocalFeature<SpatialLocation, FloatFV> localFeature = new LocalFeatureImpl<SpatialLocation, FloatFV>(
                         new SpatialLocation(rectangle.x, rectangle.y), feature);
+
                 features.add(localFeature);
             }
 
