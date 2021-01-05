@@ -172,13 +172,18 @@ public class LinearClassifier extends Classifier {
         // Iterate through training dataset extracting the patches
         for (Map.Entry<String, VFSListDataset<FImage>> images : fullTrainingDataset.entrySet()) {
             for (FImage image : images.getValue()) {
+                List<LocalFeature<SpatialLocation, FloatFV>> sampleList = extractor.extract(image, STEP, SIZE);
+
+                for (LocalFeature<SpatialLocation, FloatFV> localFeature : sampleList) {
+                    allkeys.add(localFeature.getFeatureVector().values);
+                }
 
                 // 10 random samples are extracted from each image
-                List<LocalFeature<SpatialLocation, FloatFV>> sampleList = extractor.extract(image, STEP, SIZE);
-                Collections.shuffle(sampleList);
-                for(int i = 0; i < 10; i++) {
-                    allkeys.add(sampleList.get(i).getFeatureVector().values);
-                }
+                //TODO uncomment this to take 10 random samples instead (and comment for loop above), drops 3% to be 10x quicker
+                // Collections.shuffle(sampleList);
+                // for(int i = 0; i < 10; i++) {
+                //      allkeys.add(sampleList.get(i).getFeatureVector().values);
+                // }
             }
         }
         System.out.println("Finished etracting images to assign features");
@@ -207,15 +212,22 @@ public class LinearClassifier extends Classifier {
         // Iterate through training dataset extracting the patches
         for (Map.Entry<String, ListDataset<FImage>> images : trainingDataset.entrySet()) {
             for (FImage image : images.getValue()) {
+                List<LocalFeature<SpatialLocation, FloatFV>> sampleList = extractor.extract(image, STEP, SIZE);
+
+                for (LocalFeature<SpatialLocation, FloatFV> localFeature : sampleList) {
+                    allkeys.add(localFeature.getFeatureVector().values);
+                }
 
                 // 10 random samples are extracted from each image
-                List<LocalFeature<SpatialLocation, FloatFV>> sampleList = extractor.extract(image, STEP, SIZE);
-                Collections.shuffle(sampleList);
-                for(int i = 0; i < 10; i++) {
-                    allkeys.add(sampleList.get(i).getFeatureVector().values);
-                }
+                //TODO uncomment this to take 10 random samples instead (and comment for loop above), drops 3% to be 10x quicker
+                // Collections.shuffle(sampleList);
+                // for(int i = 0; i < 10; i++) {
+                //      allkeys.add(sampleList.get(i).getFeatureVector().values);
+                // }
             }
         }
+
+
         System.out.println("Finished extracting images to assign features");
 
         // Cluster to learn vocabulary
