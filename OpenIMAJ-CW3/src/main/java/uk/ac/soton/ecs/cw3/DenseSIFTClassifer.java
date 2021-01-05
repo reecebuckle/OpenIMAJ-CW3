@@ -2,6 +2,7 @@ package uk.ac.soton.ecs.cw3;
 
 import de.bwaldvogel.liblinear.SolverType;
 import org.apache.commons.vfs2.FileSystemException;
+import org.opencv.xfeatures2d.SIFT;
 import org.openimaj.data.DataSource;
 import org.openimaj.data.dataset.*;
 import org.openimaj.experiment.dataset.sampling.GroupedUniformRandomisedSampler;
@@ -35,38 +36,22 @@ import java.util.List;
 import java.util.Map;
 
 public class DenseSIFTClassifer {
-    public static void main(String[] args) throws FileSystemException {
 
-        GroupedDataset<String, VFSListDataset<FImage>, FImage> images =
-                new VFSGroupDataset<>(System.getProperty("user.dir") + "/OpenIMAJ-CW3/training", ImageUtilities.FIMAGE_READER);
+    private final int CLUSTERS;
+    private final int SIFTSTEP;
+    private final int SIFTFEATURES;
 
-        GroupedRandomSplitter<String, FImage> splitter = new GroupedRandomSplitter<String, FImage>(images, 80, 0, 20);
+    public DenseSIFTClassifer(int clusters, int siftStep, int siftFeatures) {
+        this.CLUSTERS = clusters;
+        this.SIFTSTEP = siftStep;
+        this.SIFTFEATURES = siftFeatures;
+    }
 
-        // Construct feature extractor
-        DenseSIFT dsift = new DenseSIFT(5, 7);
-
-        // Apply feature extractor to windows of size 7
-        PyramidDenseSIFT<FImage> pdsift = new PyramidDenseSIFT<FImage>(dsift, 6f, 7);
-
-        //
-        HardAssigner<byte[], float[], IntFloatPair> assigner =
-                trainQuantiser(GroupedUniformRandomisedSampler.sample(splitter.getTrainingDataset(), 30), pdsift);
-
-        FeatureExtractor<DoubleFV, FImage> extractor = new PHOWExtractor(pdsift, assigner);
-
-        HomogeneousKernelMap map = new HomogeneousKernelMap(
-                HomogeneousKernelMap.KernelType.Chi2, HomogeneousKernelMap.WindowType.Rectangular);
-
-        extractor = map.createWrappedExtractor(extractor);
-
-        LiblinearAnnotator<FImage, String> ann = new LiblinearAnnotator<FImage, String>(
-                extractor, LiblinearAnnotator.Mode.MULTICLASS, SolverType.L2R_L2LOSS_SVC, 1.0, 0.00001);
-
-        ann.train(splitter.getTrainingDataset());
-
+    public void getReport(LiblinearAnnotator<FImage,String> ann, GroupedDataset<String, ListDataset<FImage>, FImage> dataset) {
+        // Obtain accuracy of classifier
         ClassificationEvaluator<CMResult<String>, String, FImage> eval =
                 new ClassificationEvaluator<CMResult<String>, String, FImage>(
-                        ann, splitter.getTestDataset(), new CMAnalyser<FImage,String>(CMAnalyser.Strategy.SINGLE));
+                        ann, dataset, new CMAnalyser<FImage,String>(CMAnalyser.Strategy.SINGLE));
 
         Map<FImage, ClassificationResult<String>> guesses = eval.evaluate();
 
@@ -76,7 +61,37 @@ public class DenseSIFTClassifer {
         System.out.println(result.getSummaryReport());
     }
 
-    public static HardAssigner<byte[], float[], IntFloatPair> trainQuantiser(
+    public LiblinearAnnotator<FImage,String>constructAnnotator(GroupedDataset<String, ListDataset<FImage>, FImage> dataset) {
+
+        // Construct feature extractor
+        DenseSIFT dsift = new DenseSIFT(SIFTSTEP, 7);
+
+        // Apply feature extractor to windows of size 7
+        PyramidDenseSIFT<FImage> pdsift = new PyramidDenseSIFT<FImage>(dsift, 6f, 7);
+
+        // Perform K-Means clustering on features
+        HardAssigner<byte[], float[], IntFloatPair> assigner =
+                trainQuantiser(GroupedUniformRandomisedSampler.sample(dataset, 30), pdsift);
+
+        // Feature extractor to train classifier
+        FeatureExtractor<DoubleFV, FImage> extractor = new PHOWExtractor(pdsift, assigner);
+
+        HomogeneousKernelMap map = new HomogeneousKernelMap(
+                HomogeneousKernelMap.KernelType.Chi2, HomogeneousKernelMap.WindowType.Rectangular);
+
+        extractor = map.createWrappedExtractor(extractor);
+
+        // Construct and train linear classifier
+        LiblinearAnnotator<FImage, String> ann = new LiblinearAnnotator<FImage, String>(
+                extractor, LiblinearAnnotator.Mode.MULTICLASS, SolverType.L2R_L2LOSS_SVC, 1.0, 0.00001);
+
+        ann.train(dataset);
+
+        return ann;
+    }
+
+    /** Method to perform K-Means clustering on a sample of SIFT features */
+    private HardAssigner<byte[], float[], IntFloatPair> trainQuantiser(
             GroupedDataset<String, ListDataset<FImage>,FImage> sample, PyramidDenseSIFT<FImage> pdsift) {
         List<LocalFeatureList<ByteDSIFTKeypoint>> allkeys = new ArrayList<LocalFeatureList<ByteDSIFTKeypoint>>();
 
@@ -88,18 +103,20 @@ public class DenseSIFTClassifer {
         // Randomize keys
         Collections.shuffle(allkeys);
 
-        // Take first 1000 keys
-        if (allkeys.size() > 10000)
-            allkeys = allkeys.subList(0, 10000);
+        // Take first subset of dense SIFT features
+        if (allkeys.size() > SIFTFEATURES)
+            allkeys = allkeys.subList(0, SIFTFEATURES);
 
-        ByteKMeans km = ByteKMeans.createKDTreeEnsemble(300);
+        // Cluster the features into separate classes
+        ByteKMeans km = ByteKMeans.createKDTreeEnsemble(CLUSTERS);
         DataSource<byte[]> datasource = new LocalFeatureListDataSource<ByteDSIFTKeypoint, byte[]>(allkeys);
         ByteCentroidsResult result = km.cluster(datasource);
 
         return result.defaultHardAssigner();
     }
 
-    public static class PHOWExtractor implements FeatureExtractor<DoubleFV, FImage> {
+    // Feature extractor to train classifier
+    private class PHOWExtractor implements FeatureExtractor<DoubleFV, FImage> {
         PyramidDenseSIFT<FImage> pdsift;
         HardAssigner<byte[], float[], IntFloatPair> assigner;
 
@@ -113,11 +130,17 @@ public class DenseSIFTClassifer {
             FImage image = object.getImage();
             pdsift.analyseImage(image);
 
+            /**
+             * Compute 4 histograms across the image
+             * BagOfVisualWords uses HardAssigner to assign each Dense SIFT feature to a
+             * visual word and compute histogram
+             * */
             BagOfVisualWords<byte[]> bovw = new BagOfVisualWords<byte[]>(assigner);
 
             PyramidSpatialAggregator<byte[], SparseIntFV> spatial = new PyramidSpatialAggregator<byte[], SparseIntFV>(
                     bovw, 2, 4);
 
+            /** Spatial histograms are appended together and normalised */
             return spatial.aggregate(pdsift.getByteKeypoints(0.015f), image.getBounds()).normaliseFV();
         }
     }

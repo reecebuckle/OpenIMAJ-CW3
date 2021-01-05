@@ -1,5 +1,15 @@
 package uk.ac.soton.ecs.cw3;
 
+import org.apache.commons.vfs2.FileSystemException;
+import org.apache.tools.ant.DynamicElementNS;
+import org.openimaj.data.dataset.GroupedDataset;
+import org.openimaj.data.dataset.VFSGroupDataset;
+import org.openimaj.data.dataset.VFSListDataset;
+import org.openimaj.experiment.dataset.split.GroupedRandomSplitter;
+import org.openimaj.image.FImage;
+import org.openimaj.image.ImageUtilities;
+import org.openimaj.ml.annotation.linear.LiblinearAnnotator;
+
 import java.io.FileWriter;
 import java.io.IOException;
 import java.text.DecimalFormat;
@@ -40,6 +50,26 @@ public class App {
             ioException.printStackTrace();
         }
     }
+
+    /**
+     * Method for running DenseSIFTClassifier
+     * Instantiates a DenseSIFTClassifier with <Clusters, siftStep, siftFeatures>
+     *     
+     * @// TODO: 05/01/2021 Try increasing clusters (600?), reducing siftStep (3?), increase siftFeatures (2000?, 1500?)
+     *     
+     * @throws FileSystemException
+     */
+    public static void runDenseSIFT() throws FileSystemException {
+        GroupedDataset<String, VFSListDataset<FImage>, FImage> images =
+                new VFSGroupDataset<>(System.getProperty("user.dir") + "/OpenIMAJ-CW3/training", ImageUtilities.FIMAGE_READER);
+
+        GroupedRandomSplitter<String, FImage> splitter = new GroupedRandomSplitter<String, FImage>(images, 80, 0, 20);
+
+        DenseSIFTClassifer classifier = new DenseSIFTClassifer(300, 5,1000);
+        LiblinearAnnotator<FImage,String> ann = classifier.constructAnnotator(splitter.getTrainingDataset());
+        classifier.getReport(ann, splitter.getTestDataset());
+    }
+
 
     /**
      * Runs Max's implementation of Convolutional Neural Network
