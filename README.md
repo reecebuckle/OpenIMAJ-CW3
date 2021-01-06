@@ -11,3 +11,5 @@ Every classifer can be run and tested from App.java (simply uncomment them in th
 Run methods do not split the training input set, and just focus on classifying images to form a robust model.
 Test methods split the input labelled data set for the purposes of measuring accuracy.
 This also where parameters can be toggled.
+
+https://github.com/reecebuckle/OpenIMAJ-CW3/blob/main/report.pdf
