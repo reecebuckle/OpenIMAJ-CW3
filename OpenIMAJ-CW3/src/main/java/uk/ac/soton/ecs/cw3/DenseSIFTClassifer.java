@@ -140,61 +140,7 @@ public class DenseSIFTClassifer extends Classifier {
         ann.train(splits.getTrainingDataset());
 
     }
-
-
-    /**
-     * Method used for training and returning an annotator
-     * @param dataset the training dataset on which to train the annotator
-     */
-    public void constructAnnotator(GroupedDataset<String, ListDataset<FImage>, FImage> dataset) {
-        // Construct feature extractor
-        DenseSIFT dsift = new DenseSIFT(SIFTSTEP, 7);
-
-        // Apply feature extractor to windows of size 7
-        PyramidDenseSIFT<FImage> pdsift = new PyramidDenseSIFT<FImage>(dsift, 6f, 7);
-
-        System.out.println("Obtaining SIFT features from images and clustering.");
-        // Perform K-Means clustering on features
-        HardAssigner<byte[], float[], IntFloatPair> assigner =
-                trainQuantiser(GroupedUniformRandomisedSampler.sample(dataset, 30), pdsift);
-
-        System.out.println("Running BoVW feature extractor...");
-        // Feature extractor to train classifier
-        FeatureExtractor<DoubleFV, FImage> extractor = new PHOWExtractor(pdsift, assigner);
-
-        HomogeneousKernelMap map = new HomogeneousKernelMap(
-                HomogeneousKernelMap.KernelType.Chi2, HomogeneousKernelMap.WindowType.Rectangular);
-
-        System.out.println("Creating HomogeneuosKernelMap...");
-        extractor = map.createWrappedExtractor(extractor);
-
-        System.out.println("Training the linear classifier...");
-        // Construct and train linear classifier
-        LiblinearAnnotator<FImage, String> ann = new LiblinearAnnotator<FImage, String>(
-                extractor, LiblinearAnnotator.Mode.MULTICLASS, SolverType.L2R_L2LOSS_SVC, 1.0, 0.00001);
-
-        ann.train(dataset);
-    }
-
-//    /**
-//     * Method used to display detailed reports on the accuracy of a model
-//     * @param ann the model to test
-//     * @param dataset the dataset on which to test the model
-//     */
-//    public void getReport(LiblinearAnnotator<FImage,String> ann, GroupedDataset<String, ListDataset<FImage>, FImage> dataset) {
-//        // Obtain accuracy of classifier
-//        ClassificationEvaluator<CMResult<String>, String, FImage> eval =
-//                new ClassificationEvaluator<CMResult<String>, String, FImage>(
-//                        ann, dataset, new CMAnalyser<FImage,String>(CMAnalyser.Strategy.SINGLE));
-//
-//        Map<FImage, ClassificationResult<String>> guesses = eval.evaluate();
-//
-//        CMResult<String> result = eval.analyse(guesses);
-//
-//        System.out.println(result.getDetailReport());
-//        System.out.println(result.getSummaryReport());
-//    }
-
+    
     /**
      * Method to perform K-Means clustering on a sample of SIFT features
      * @param sample the sample of images
