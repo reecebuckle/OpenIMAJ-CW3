@@ -55,7 +55,6 @@ public class NaiveBayesClassifier extends Classifier {
         this.BIN_SIZE = bin_size;
         this.E_THRESHOLD = e_threshold;
         this.CLUSTERS = clusters;
-
     }
 
     /**
@@ -131,8 +130,6 @@ public class NaiveBayesClassifier extends Classifier {
     }
 
     /**
-     * TODO: Update description
-     *
      * @param trainingDataset The dataset to be quantised (full training set to form robust model)
      * @param denseSIFT
      * @return HardAssigner that assigns the features to identifiers
@@ -153,7 +150,7 @@ public class NaiveBayesClassifier extends Classifier {
         // Cluster to learn vocabulary
         ByteKMeans km = ByteKMeans.createKDTreeEnsemble(CLUSTERS);
         final DataSource<byte[]> datasource = new LocalFeatureListDataSource<>(allkeys.get());
-
+        System.out.println("Finished assigning extracted features, Now clustering");
         ByteCentroidsResult result = km.cluster(datasource);
 
         return result.defaultHardAssigner();
@@ -183,6 +180,7 @@ public class NaiveBayesClassifier extends Classifier {
         ByteKMeans km = ByteKMeans.createKDTreeEnsemble(CLUSTERS);
         final DataSource<byte[]> datasource = new LocalFeatureListDataSource<>(allkeys.get());
 
+        System.out.println("Finished assigning extracted features, Now clustering");
         ByteCentroidsResult result = km.cluster(datasource);
 
         return result.defaultHardAssigner();

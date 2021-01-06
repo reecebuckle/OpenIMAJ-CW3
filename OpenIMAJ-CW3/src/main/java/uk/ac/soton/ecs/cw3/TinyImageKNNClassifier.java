@@ -115,12 +115,9 @@ public class TinyImageKNNClassifier extends Classifier {
             // Resizes the image
             output.processInplace(new ResizeProcessor(SIZE, SIZE));
 
-            // TODO CAN SOMEONE EXPLAIN WHY THIS CODE IS COMMENTED OUT, OR REMOVE IT
-            // Subtracts the mean pixel value from the entire image
+            // TODO mean centring and normalising makes KNN Worse!
             // output.processInplace(new MeanCenter());
-            // Creates the feature vector (1D vector)
             // DoubleFV feature = new DoubleFV(output.getDoublePixelVector());
-            // Normalises the feature vector to make each pixel unit length
             // feature.normaliseFV();
 
             return new DoubleFV(output.getDoublePixelVector());
