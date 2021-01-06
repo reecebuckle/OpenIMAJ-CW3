@@ -2,6 +2,7 @@ package uk.ac.soton.ecs.cw3;
 
 import de.bwaldvogel.liblinear.SolverType;
 import org.apache.commons.vfs2.FileSystemException;
+import org.opencv.xfeatures2d.SIFT;
 import org.openimaj.data.DataSource;
 import org.openimaj.data.dataset.GroupedDataset;
 import org.openimaj.data.dataset.ListDataset;
