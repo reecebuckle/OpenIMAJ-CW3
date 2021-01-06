@@ -140,7 +140,7 @@ public class DenseSIFTClassifer extends Classifier {
         ann.train(splits.getTrainingDataset());
 
     }
-    
+
     /**
      * Method to perform K-Means clustering on a sample of SIFT features
      * @param sample the sample of images
